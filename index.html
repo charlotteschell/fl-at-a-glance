@@ -46,7 +46,7 @@ input[type="text"]:focus{border-color:rgba(6,182,212,0.4);outline:none}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 .acr{position:relative;border-bottom:1px dotted rgba(6,182,212,0.4);color:#06b6d4;cursor:help}
-.acr .acr-tip{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 8px);left:0;background:#12121e;border:1px solid rgba(6,182,212,0.3);border-radius:6px;padding:8px 12px;font-size:11px;line-height:1.5;color:#9ca3af;white-space:normal;width:280px;z-index:999;pointer-events:none;transition:opacity 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.acr .acr-tip{visibility:hidden;opacity:0;position:fixed;background:#12121e;border:1px solid rgba(6,182,212,0.3);border-radius:6px;padding:8px 12px;font-size:11px;line-height:1.5;color:#9ca3af;white-space:normal;width:280px;max-width:90vw;z-index:9999;pointer-events:none;transition:opacity 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
 .acr .acr-tip strong{color:#06b6d4;display:block;margin-bottom:2px;font-size:12px}
 .acr:hover .acr-tip{visibility:visible;opacity:1}
 .stat-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px}
@@ -827,6 +827,30 @@ setTimeout(() => {
   });
   observer.observe(document.getElementById('root'), {childList: true, subtree: true});
 }, 500);
+
+
+// Dynamic tooltip positioning (fixed position, never clipped)
+document.getElementById('root').addEventListener('mouseenter', function(e) {
+  if (!e.target.classList.contains('acr')) return;
+  var tip = e.target.querySelector('.acr-tip');
+  if (!tip) return;
+  var rect = e.target.getBoundingClientRect();
+  // Position below the acronym by default
+  var top = rect.bottom + 6;
+  var left = rect.left;
+  // If tooltip would go off right edge, shift left
+  if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
+  if (left < 10) left = 10;
+  // If tooltip would go off bottom, flip to above
+  if (top + 150 > window.innerHeight) top = rect.top - 8;
+  tip.style.top = top + 'px';
+  tip.style.left = left + 'px';
+  // If flipped above, reposition using actual height
+  if (top < rect.top) {
+    tip.style.top = 'auto';
+    tip.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+  }
+}, true);
 </script>
 </body>
 </html>
