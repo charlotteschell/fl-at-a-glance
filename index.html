@@ -46,9 +46,9 @@ input[type="text"]:focus{border-color:rgba(6,182,212,0.4);outline:none}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 .acr{position:relative;border-bottom:1px dotted rgba(6,182,212,0.4);color:#06b6d4;cursor:help}
-.acr .acr-tip{visibility:hidden;opacity:0;position:fixed;background:#12121e;border:1px solid rgba(6,182,212,0.3);border-radius:6px;padding:8px 12px;font-size:11px;line-height:1.5;color:#9ca3af;white-space:normal;width:280px;max-width:90vw;z-index:9999;pointer-events:none;transition:opacity 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.acr .acr-tip{visibility:hidden;opacity:0;position:fixed;top:-9999px;left:-9999px;background:#12121e;border:1px solid rgba(6,182,212,0.3);border-radius:6px;padding:8px 12px;font-size:11px;line-height:1.5;color:#9ca3af;white-space:normal;width:280px;max-width:90vw;z-index:9999;pointer-events:none;transition:opacity 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
 .acr .acr-tip strong{color:#06b6d4;display:block;margin-bottom:2px;font-size:12px}
-.acr:hover .acr-tip{visibility:visible;opacity:1}
+/* tooltip show/hide handled by JS */
 .stat-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px}
 .dept-border{border-left:2px solid;padding-left:12px;margin-bottom:16px}
 .step-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em}
@@ -498,7 +498,7 @@ function WorkflowTab() {
             {cat.workflows.map(w => {
               const isExp = expanded === w.id;
               return (
-                <div key={w.id} className="card" style={{marginBottom:10,overflow:"hidden",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
+                <div key={w.id} className="card" style={{marginBottom:10,overflow:"visible",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
                   <div onClick={() => setExpanded(isExp?null:w.id)} className="expand-btn" style={{padding:14,display:"flex",justifyContent:"space-between",alignItems:"start"}}>
                     <div><div style={{fontWeight:500,fontSize:14}}>{w.name}</div><div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{w.trigger}</div></div>
                     <span style={{fontSize:11,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span>
@@ -673,7 +673,7 @@ function TicketPipelinesTab() {
           );})}
         </div>
         {tpPipelines.map(function(p,i){var isExp=expanded===p.name;return(
-          <div key={i} className="card" style={{marginBottom:8,overflow:"hidden",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
+          <div key={i} className="card" style={{marginBottom:8,overflow:"visible",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
             <div onClick={function(){setExpanded(isExp?null:p.name);}} className="expand-btn" style={{padding:"12px 14px"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:p.c}}></span><span style={{fontWeight:500,fontSize:14}}>{p.name}</span><span className="mono step-badge" style={{color:p.c,border:"1px solid "+p.c+"33",background:p.c+"1a"}}>{p.mat}</span></div>
@@ -830,27 +830,48 @@ setTimeout(() => {
 
 
 // Dynamic tooltip positioning (fixed position, never clipped)
-document.getElementById('root').addEventListener('mouseenter', function(e) {
-  if (!e.target.classList.contains('acr')) return;
-  var tip = e.target.querySelector('.acr-tip');
+document.addEventListener('mouseover', function(e) {
+  var acr = e.target.closest('.acr');
+  if (!acr) return;
+  var tip = acr.querySelector('.acr-tip');
   if (!tip) return;
-  var rect = e.target.getBoundingClientRect();
-  // Position below the acronym by default
-  var top = rect.bottom + 6;
-  var left = rect.left;
-  // If tooltip would go off right edge, shift left
-  if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-  if (left < 10) left = 10;
-  // If tooltip would go off bottom, flip to above
-  if (top + 150 > window.innerHeight) top = rect.top - 8;
-  tip.style.top = top + 'px';
-  tip.style.left = left + 'px';
-  // If flipped above, reposition using actual height
-  if (top < rect.top) {
-    tip.style.top = 'auto';
-    tip.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+  var rect = acr.getBoundingClientRect();
+  // Reset any previous bottom positioning
+  tip.style.bottom = 'auto';
+  // Try below first
+  var tipTop = rect.bottom + 6;
+  var tipLeft = rect.left;
+  // Keep within horizontal bounds
+  if (tipLeft + 280 > window.innerWidth) tipLeft = window.innerWidth - 290;
+  if (tipLeft < 10) tipLeft = 10;
+  // If below would go off screen, flip above
+  tip.style.visibility = 'hidden';
+  tip.style.opacity = '0';
+  tip.style.display = 'block';
+  tip.style.top = tipTop + 'px';
+  tip.style.left = tipLeft + 'px';
+  var tipRect = tip.getBoundingClientRect();
+  if (tipRect.bottom > window.innerHeight - 10) {
+    tipTop = rect.top - tipRect.height - 6;
+    if (tipTop < 10) tipTop = 10;
+    tip.style.top = tipTop + 'px';
   }
-}, true);
+  tip.style.display = '';
+  tip.style.visibility = 'visible';
+  tip.style.opacity = '1';
+});
+document.addEventListener('mouseout', function(e) {
+  var acr = e.target.closest('.acr');
+  if (!acr) return;
+  // Check if we're moving to a child of the same .acr
+  if (e.relatedTarget && acr.contains(e.relatedTarget)) return;
+  var tip = acr.querySelector('.acr-tip');
+  if (!tip) return;
+  tip.style.visibility = 'hidden';
+  tip.style.opacity = '0';
+  tip.style.top = '-9999px';
+  tip.style.left = '-9999px';
+});
 </script>
 </body>
 </html>
