@@ -105,7 +105,7 @@ const onboardingSections = [
         {init.planned.map((p,j)=>(<div key={j} className="inner-card"><div style={{fontSize:12,fontWeight:500,color:init.c,marginBottom:3}}>{p.l}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{p.d}</div></div>))}
         <div style={{marginTop:8,padding:"10px 14px",background:"rgba(255,255,255,0.02)",borderRadius:6,fontSize:12,color:"#6b7280",lineHeight:"1.6"}}><strong style={{color:"#9ca3af"}}>How to think about it:</strong> {init.think}</div>
       </div>))}
-      <div className="warn-card" style={{borderRadius:8,padding:"12px 16px",fontSize:12,color:"#eab308",lineHeight:"1.6"}}><strong>Open questions for kick-off:</strong> <span style={{color:"#9ca3af"}}>Who is Brad? He's not in any FL docs — new hire or US-side product/eng? · Is Bizee replacing IncFile as the incorporation vendor? · What's the timeline expectation? These are significant engineering efforts. · How does this relate to the existing M1-M4 milestones on the PRO Notice Pipeline? · Does "minimize fulfillment personnel" mean reduction, redeployment, or just not needing to hire as volume grows?</span></div>
+      <div className="info-card" style={{borderRadius:8,padding:"12px 16px",fontSize:12,color:"#06b6d4",lineHeight:"1.6"}}><strong>Leadership context:</strong> <span style={{color:"#9ca3af"}}>Brad Matthews is Head of Operations, reporting to Ran. He owns Initiative 2 (Books Review Automation). Camille owns Initiatives 1 {"&"} 3. Davis Troutman reports to Brad and handles daily operations, fraud detection, and customer escalations.</span></div>
     </div>
   )},
   {id:"overview",label:"The big picture",content:()=>(
@@ -235,7 +235,7 @@ const wfCats = [
   ]},
   {id:"cross",label:"Cross-Team",owner:"Multiple",c:"#9ca3af",workflows:[
     {id:"notice",name:"PRO Notice Pipeline",pipeline:"PRO - Notice Pipeline",trigger:"Customer uploads Notice or mail received",steps:["Current: Lettuce Support manually copies ticket | Formations creates from Stable mailbox","Soon (M1): Webhook auto-creates ticket on upload","Ticket created with ShareFile folder link","Enter 'New' → route through 12 stages","If info needed: 'Escalated to Pro'","Once resolved: 'Resolved' or 'Cancelled'"],output:"Notice resolved",notes:"M1 = webhook | M2 = auto screening | M3 = Stable mail | M4 = formations.lettuce.co"},
-    {id:"churn",name:"Churning a Customer",pipeline:"Customer Churn",trigger:"Customer requests to cancel/leave",steps:["CS uses 'Customer Churn (initial discovery)' HubSpot template","Ask: Closing company or moving to another provider?","Ask: If moving, continue using Gusto?","Ask: If not, should Gusto file next quarter's taxes and make payments?","CS creates Task for Fulfillment with answers","FL: Cancel subscription in Stripe (search by email, may need to dig)","FL: Handle Gusto based on customer answers","FL: Update HubSpot records"],output:"Customer fully churned, all systems updated"},
+    {id:"churning",name:"Churning a Customer",pipeline:"Cancellation workflow",trigger:"Customer requests cancellation or meets churn criteria",steps:["Receive cancellation request or identify churn risk","Review customer account: subscription tier, history, outstanding items","Check for unpaid invoices or open tax returns","Process cancellation in HubSpot — update ticket status","Cancel Gusto payroll if applicable","Cancel Hurdlr/bookkeeping subscription","Remove from active pipelines","Send confirmation to customer","Update internal tracking (Excel + HubSpot)"],output:"Customer fully offboarded",notes:"Cross-team: CS initiates, Config/Accounting/Tax each handle their cleanup. Billing handled by Controller Support (Chamara)."},
   ]},
 ];
 
@@ -243,7 +243,7 @@ const unmigrated = [
   {group:"CS Support SOPs (18 — not migrated)",items:["Help Desk Ticket Handling","FL Task Handling","Product Issues","Documents via Email","Accounting Issues","State Renewal/Statement of Info","Customer Request for P&L","Open Items List","System Issues","W2 Requests","Category Options Unavailable","California FTB Payments","Payroll Setup for New Employee","Notices","Update CC","Can't Access Tax Return in App","IRS Balance Due Instructions","Return Reprocessing"]},
   {group:"AI Chat Handoff Templates (7)",items:["Greeting","Config handoffs","Tax (Common)","1040 Tax","1120S Tax","Accounting","Controller Support"]},
   {group:"Playbooks & Process Guides (11 — access restricted)",items:["Config Process Guide","Config Playbook (WIP)","Accounting Process Guide","Accounting Playbook (WIP)","1120S Process Guide","1120S Playbook (WIP)","1040 Process Guide","1040 Playbook (WIP)","Tax Operations Guide","Doc/Info Processing Guide","Controller Support Guide"]},
-  {group:"Other Processes (7 — access restricted)",items:["Churning a Customer","Sales Handoff / Onboarding Questions","Customer Experience SLA","Customer Expectation / Responsibilities","Closing S-Corp with Dissolution","YTD Accounting Catch-up","Investigative Bookkeeping"]},
+  {group:"Other Processes (7 — access restricted)",items:["Sales Handoff / Onboarding Questions","Customer Experience SLA","Customer Expectation / Responsibilities","Closing S-Corp with Dissolution","YTD Accounting Catch-up","Investigative Bookkeeping"]},
 ];
 
 // ==================== GLOSSARY DATA ====================
@@ -251,7 +251,7 @@ const glossary = [
   {term:"FL",full:"Fulfillment",cat:"Organization",detail:"The Sri Lanka-based fulfillment operation (~45 staff). When people say 'FL team' or 'FL escalation,' they mean the gsk team in Sri Lanka."},
   {term:"gsk",full:"Sri Lanka fulfillment company",cat:"Organization",detail:"The entity that employs the SL fulfillment team. Has its own vision: 'Redefine U.S. tax and accounting fulfilment services.' Handles 90%+ of all work."},
   {term:"SL",full:"Sri Lanka",cat:"Organization",detail:"Shorthand for the Sri Lanka team/office. SL team works the US night shift."},
-  {term:"KMT",full:"Know Mas Tax (Partner Brand)",cat:"Organization",detail:"A separate client/partner brand alongside Formations and Lettuce. Has its own customer base (20→50 1040 returns), Slack channels (kmt-external-notifications, KMT Operations), separate OIL templates, and dedicated management process. Salinda Chamal is the main contact."},
+  {term:"KMT",full:"Know Mas Tax",cat:"Organization",detail:"A separate client/partner brand alongside Formations and Lettuce. Has its own customer base (20→50 1040 returns), Slack channels, and OIL templates."},
   {term:"CSM",full:"Customer Success Manager",cat:"Roles",detail:"US-based Level 3 escalation handlers. Tax advisory, retirement, complex estimates, cancellations, account strategy."},
   {term:"CSA",full:"Customer Success Associate",cat:"Roles",detail:"Level 2 bridge role. Escalates with comments, spots upsells, manages AI chat handoffs."},
   {term:"CS",full:"Customer Support / Success",cat:"Roles",detail:"'CS Support' = Dushini's SL team (L1/L2). 'US CS' = US-based CSMs."},
@@ -285,18 +285,77 @@ const glossary = [
   {term:"PAY",full:"Catch-up Payroll",cat:"Pipelines",detail:"EOY catch-up payroll pipeline."},
   {term:"BS",full:"Banking Status",cat:"Pipelines",detail:"Bank transaction categorization pipeline."},
   {term:"BIB",full:"Books in a Box",cat:"Products",detail:"Lowest product tier. Tiers: Platinum → Standard → Digital → BIB."},
+  {term:"CCH",full:"Tax Software (Wolters Kluwer)",cat:"Tools & Systems",detail:"Tax compliance software used for 1120S/1040 preparation. CCH Axcess is the cloud version. Referenced in Tax Operations Process Guide."},
+  {term:"POA",full:"Power of Attorney",cat:"Legal / Config",detail:"Authorization for Formations to represent customers before the IRS. Form 2848. Required before resolving certain notices."},
+  {term:"PRO",full:"Lettuce Partner Channel",cat:"Organization",detail:"Partner/referral channel pipeline. PRO pipeline = partner-referred customers. PRO Notice Pipeline = notice handling for these customers (12 stages, M1-M4 milestones)."},
+  {term:"MRR",full:"Monthly Recurring Revenue",cat:"Finance",detail:"Key business metric tracked by Controller Support (Chamara). Stripe billing data reconciliation."},
+  {term:"AR",full:"Accounts Receivable",cat:"Finance",detail:"Outstanding customer payments. Part of Controller Support responsibilities."},
   {term:"SLA",full:"Service Level Agreement",cat:"Operations",detail:"CS Support: 48hr courtesy email for escalated tickets. 2025 goal: SLAs for all engagements."},
   {term:"QA",full:"Quality Assurance",cat:"Operations",detail:"Dushini reviews all CS drafts. Accounting has multi-step monthly checklist."},
   {term:"BAU",full:"Business As Usual",cat:"Operations",detail:"Steady-state ops after rollout. Target model once SL support is ramped."},
   {term:"WBR",full:"Weekly Business Review",cat:"Reporting",detail:"Monday report. Part of weekly cadence with OIL List, Pipeline Review, L10 Report."},
   {term:"L10",full:"Level 10 Meeting (EOS)",cat:"Reporting",detail:"EOS framework weekly meeting. L10 Report produced Wednesdays."},
-  {term:"CCH",full:"CCH (Tax Software)",cat:"Tools & Systems",detail:"Tax preparation software used by the Tax Operations team. First SOP in Tax Ops is CCH Profile/Return Creation."},
-  {term:"POA",full:"Power of Attorney",cat:"Legal / Config",detail:"Tax form (Form 2848) authorizing someone to represent a taxpayer before the IRS. POA Processing is one of the 7 Tax Operations SOPs."},
-  {term:"PRO",full:"Professional / Lettuce Partner Channel",cat:"Pipelines",detail:"Label for the Lettuce-branded customer base that Formations fulfills. PRO pipelines (PRO Notice, PRO New Business Incorporation, 1040 PRO) are specifically for Lettuce partner customers, distinct from Formations direct customers."},
-  {term:"MRR",full:"Monthly Recurring Revenue",cat:"Operations",detail:"Subscription revenue metric. Controller Support (Chamara) maintains MRR records, manages plan changes, and does MRR updates/reconciliation."},
-  {term:"AR",full:"Accounts Receivable",cat:"Operations",detail:"Money owed to the company. Controller Support has an AR Collections Process for outstanding customer payments."},
 ];
 
+
+
+
+// ==================== TICKET PIPELINE AUDIT DATA ====================
+const tpPipelines = [
+  {name:"Formations",vol:516,owner:"Harriet / Davis",ss:"Partial",mat:"Medium",c:"#eab308",
+    findings:["~35% are manually created ACTION REQUIRED tickets by Harriet for ID requests, profession titles, EIN letters, address discrepancies, etc.","EIN Letter Mismatch is the top automated reason (~80 tickets). Automated email workflows exist but resolution still requires customer action.","Pipeline overloaded with mixed ticket types \u2014 state registrations, new business holds, existing business holds, manual outreach, and doc requests all share this pipeline."],
+    reasons:[{r:"EIN_LETTER_MISMATCH",ct:"~80",s:1},{r:"OTHER",ct:"~40",s:0},{r:"BUSINESS_NOT_FOUND",ct:"~35",s:2},{r:"ADDRESS_ERROR",ct:"~30",s:1},{r:"ARTICLES_NEEDED",ct:"~25",s:1},{r:"ACTION REQUIRED (manual)",ct:"~180",s:2},{r:"State Reg EXISTING_ACCOUNT",ct:"~15",s:2},{r:"S-Corp Verification",ct:"~5",s:0}],
+    recs:[{p:"P2",t:"Split into sub-pipelines: New Business Holds, Existing Business Verification, State Registrations, Manual Onboarding Outreach",im:"Enables clean ownership and reporting"},{p:"P2",t:"Automate ACTION REQUIRED tickets with in-app self-service matching Unit pattern",im:"Eliminates ~35% of Formations volume"}]},
+  {name:"Unit (Banking)",vol:362,owner:"Harriet (doc requests)",ss:"Yes \u2014 In-app tasks",mat:"High",c:"#10b981",
+    findings:["Model pipeline \u2014 in-app task + auto email pattern works well when reason field is populated.","69% of tickets have UNKNOWN reason \u2014 webhook not passing document type to HubSpot.","Duplicate ticket creation bug \u2014 sometimes creates 2 tickets per application."],
+    reasons:[{r:"UNKNOWN (empty)",ct:"~250 (69%)",s:2},{r:"OTHER",ct:"~55 (15%)",s:0},{r:"ADDRESS_VERIFICATION",ct:"~30 (8%)",s:2},{r:"ID_DOCUMENT",ct:"~10 (3%)",s:1},{r:"SSN / CERT / PASSPORT",ct:"~15 (4%)",s:1}],
+    recs:[{p:"P0",t:"Fix reason field population \u2014 webhook must pass document type",im:"Enables accurate reporting and targeted automation"},{p:"P1",t:"Fix duplicate ticket creation with dedup logic",im:"Reduces noise and prevents system errors"}]},
+  {name:"Gusto (Payroll)",vol:263,owner:"Unassigned",ss:"No",mat:"Low",c:"#f43f5e",
+    findings:["Duplicate tickets \u2014 system creates 2 per blocker. Actual unique blockers ~130.","PAYROLL_BLOCKER is a black box \u2014 95% have no detail. Single most impactful data quality gap.","No self-service. Elena developing embedded Gusto Information Request flow (feature flag, 3 customers).","No pipeline owner \u2014 tickets sit in New until someone manually triages."],
+    reasons:[{r:"PAYROLL_BLOCKER",ct:"~250 (95%)",s:2},{r:"NEEDS_COMPANY_INFORMATION",ct:"~10 (4%)",s:2},{r:"NEEDS_COMPANY_UNSUSPEND",ct:"~2 (1%)",s:0},{r:"NEEDS_INVITE_ACCEPTANCE",ct:"~1 (<1%)",s:2}],
+    recs:[{p:"P0",t:"Accelerate Gusto self-service embed to GA",im:"Could eliminate 95%+ manual handling (~250 touches/quarter)"},{p:"P0",t:"Fix duplicate ticket creation",im:"Halves ticket noise immediately"},{p:"P1",t:"Decompose PAYROLL_BLOCKER \u2014 capture sub-reasons from Gusto API",im:"Targeted resolution paths per sub-reason"}]},
+  {name:"Hurdlr (Transactions)",vol:145,owner:"Unassigned",ss:"No",mat:"None",c:"#6b7280",
+    findings:["Customer-initiated \u2014 user flags a transaction. Customer memo in description is sole context.","Not an activation blocker. Should be in general triage rotation."],
+    reasons:[{r:"Customer memo (unstructured)",ct:"145",s:0}],
+    recs:[{p:"P3",t:"Include in triage rotation; no dedicated automation needed",im:"Low priority"}]},
+  {name:"Onboarding Review",vol:124,owner:"Unassigned",ss:"No",mat:"Low",c:"#f43f5e",
+    findings:["Address issues are 28% and most automatable. In-app address correction could resolve most.","High-income screening (24%) needs documented playbook \u2014 no clear criteria.","Many tickets stay in New indefinitely \u2014 potential churned customers."],
+    reasons:[{r:"ADDRESS_NOT_FOUND",ct:"~35 (28%)",s:1},{r:"ESTIMATED_INCOME",ct:"~30 (24%)",s:2},{r:"UNKNOWN (empty)",ct:"~30 (24%)",s:2},{r:"IDENTITY_VERIFICATION",ct:"~15 (12%)",s:2},{r:"SANCTION",ct:"~8 (6%)",s:0}],
+    recs:[{p:"P1",t:"Build in-app address correction flow",im:"~35 fewer touches/quarter + faster onboarding"},{p:"P2",t:"Document high-income review playbook",im:"Consistency for 24% of tickets"}]},
+  {name:"Account Change Request",vol:37,owner:"Unassigned",ss:"No",mat:"None",c:"#6b7280",
+    findings:["~80% email changes, ~20% phone changes. No assigned owner."],
+    reasons:[{r:"Email change",ct:"~30 (80%)",s:1},{r:"Phone change",ct:"~7 (20%)",s:1}],
+    recs:[{p:"P2",t:"Self-service contact changes with verification",im:"37 fewer touches/quarter"}]},
+  {name:"Business Formation",vol:30,owner:"Unassigned",ss:"No",mat:"Low",c:"#f43f5e",
+    findings:["Post-filing verification. NAME_NOT_MATCHED dominant (60%).","Parsing failures (10%) could be auto-retried."],
+    reasons:[{r:"NAME_NOT_MATCHED",ct:"~18 (60%)",s:0},{r:"EIN_LETTER_NOT_FOUND",ct:"~5 (17%)",s:2},{r:"ARTICLES_NOT_FOUND",ct:"~3 (10%)",s:2},{r:"Parsing failures",ct:"~3 (10%)",s:2}],
+    recs:[{p:"P2",t:"Consolidate with Formations pipeline",im:"Cleaner ownership"}]},
+  {name:"Business Verification",vol:12,owner:"Unassigned",ss:"No",mat:"Low",c:"#f43f5e",
+    findings:["Significant overlap with Formations hold tickets. Strong consolidation candidate."],
+    reasons:[{r:"ARTICLES_NOT_FOUND",ct:"~8",s:2},{r:"UNKNOWN",ct:"~4",s:0}],
+    recs:[{p:"P2",t:"Merge into Formations pipeline",im:"Eliminates overlapping pipelines"}]},
+  {name:"State Registration",vol:15,owner:"Formations",ss:"No",mat:"Low",c:"#f43f5e",
+    findings:["Activation blocker \u2014 impacts time-to-first-payroll. No SLA.","EXISTING_ACCOUNT = 67%. Buried in Formations catch-all."],
+    reasons:[{r:"EXISTING_ACCOUNT",ct:"~10 (67%)",s:0},{r:"REGISTRATION_ERROR",ct:"~3 (20%)",s:0},{r:"OTHER / UNKNOWN",ct:"~2 (13%)",s:0}],
+    recs:[{p:"P1",t:"Track as distinct activation metric with SLA",im:"Directly impacts time-to-first-payroll"}]},
+];
+const tpGaps = [
+  {ic:"\u{1F6A8}",ti:"Ownership",g:"7 of 9 active pipelines have no assigned ticket owner. Tickets sit in New for days or weeks.",f:"Daily triage rotation. Default owners per pipeline. HubSpot alerts when unactioned >24h."},
+  {ic:"\u{1F4CA}",ti:"Data Quality",g:"Unit (69% UNKNOWN), Gusto (95% generic PAYROLL_BLOCKER) have poor reason-field coverage.",f:"Audit webhook integrations. Ensure every ticket has a specific, actionable reason."},
+  {ic:"\u{1F504}",ti:"Duplicates",g:"Gusto creates 2 tickets per blocker. Unit occasionally creates duplicates.",f:"Add dedup logic before ticket creation."},
+  {ic:"\u{1F3AF}",ti:"Self-Service",g:"Only Unit has in-app self-service. Gusto, Onboarding Review, Account Changes all have high potential.",f:"Replicate Unit pattern: in-app task + auto email + HubSpot tracking."},
+  {ic:"\u{1F4DD}",ti:"Documentation",g:"No playbooks for most pipelines. Hurdlr and Account Change have zero docs.",f:"Per-pipeline SOPs: triggers, owners, resolution steps, SLAs, escalation paths."},
+  {ic:"\u23F0",ti:"SLAs",g:"No SLAs. No stale-ticket alerts. No dashboards.",f:"Define SLAs per pipeline. Dashboards + Slack alerts for breaches."},
+];
+const tpRecs = [
+  {p:"P0",c:C.red,t:"Accelerate Gusto self-service embed",d:"263 tickets/90d, zero self-service. Ship Elena's flow to GA.",im:"~250 fewer touches/quarter"},
+  {p:"P0",c:C.red,t:"Fix data quality (Unit + Gusto reason fields)",d:"Webhooks must pass specific reasons to HubSpot.",im:"Enables all downstream automation"},
+  {p:"P1",c:C.orange,t:"In-app address correction (Onboarding Review)",d:"28% of tickets are address issues. Maps-based confirmation.",im:"~35 fewer touches/quarter"},
+  {p:"P1",c:C.orange,t:"Daily triage + pipeline ownership",d:"Default owners. Daily triage. Slack alerts for stale tickets.",im:"Time-to-action: days to hours"},
+  {p:"P2",c:C.blue,t:"Split Formations into sub-pipelines",d:"Consolidate overlap with Business Formation and Verification.",im:"Clean ownership, metrics, targeting"},
+  {p:"P2",c:C.blue,t:"Self-service account changes",d:"37 email/phone changes per quarter.",im:"37 fewer touches/quarter"},
+  {p:"P3",c:"#6b7280",t:"Per-pipeline SOPs and SLAs",d:"Playbooks: triggers, owners, resolution, SLAs, escalation.",im:"Onboarding, consistency, accountability"},
+];
 
 
 // ==================== TEAM DATA ====================
@@ -358,18 +417,18 @@ const teamData = {
       {name:"Gayan",role:"General / Admin",area:"Admin",email:"",notes:"Monitors general Slack channel. gsk Admin functions."},
       {name:"Keshani Madurapperuma",role:"Config Specialist",area:"Configuration",email:"",notes:"Handles Swyft Filings incorporations. Config team member under Nawanjana."},
       {name:"Pavindi Mahawattage",role:"Tax Notice Handling",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack channel. Handles individual tax notices."},
-      {name:"Dharshana Udawatte",role:"Tax Notice / Individual Tax",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack. Handles individual tax and config notices. Also does 1040 tax preparation."},
+      {name:"Dharshana",role:"Tax Notice Handling",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack. Individual tax and config notices."},
       {name:"Roshan Sanjeewa",role:"Business Tax",area:"Business Tax",email:"",notes:"Business tax team member under Dhilan."},
       {name:"Chamara Liyanage",role:"Revenue Recognition",area:"Business Tax",email:"",notes:"Monitors revenue-recognition-team Slack channel."},
       {name:"Anjale",role:"Config / Platinum",area:"Configuration",email:"",notes:"Handles Lettuce config and Platinum work fulfillment."},
       {name:"Kavindu",role:"Tax (1040/1120S)",area:"Tax",email:"",notes:"Handles both individual and business tax work. Cost segregation."},
-      {name:"Udeshani Shanika",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Handles cost-segregation-notifications. Lettuce individual tax. Also does 1040 tax preparation."},
-      {name:"Kavindu Peiris",role:"Individual Tax / Business Tax",area:"Individual Tax",email:"",notes:"1040 tax preparer. Also handles 1040 rejection processing and business tax support."},
-      {name:"Piumi Imalsha",role:"Payroll Notice Handling",area:"Configuration",email:"",notes:"Handles payroll-notice-handling along with Dulani."},
-      {name:"Dulani",role:"Payroll Notice Handling",area:"Configuration",email:"m.dulani@formationscorp.com",notes:"Handles payroll-notice-handling along with Piumi."},
+      {name:"Udeshani Shanika",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Handles cost-segregation-notifications. Lettuce individual tax."},
       {name:"Vidushika Wijesinghe",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Individual tax team under Shiran."},
       {name:"Senuri",role:"Config / Tax Notice",area:"Configuration",email:"",notes:"Handles config and tax notice work."},
       {name:"Malan",role:"Config / Payroll Notice",area:"Configuration",email:"",notes:"Handles payroll notice config work."},
+      {name:"Kavindu Peiris",role:"Individual Tax",area:"Individual Tax",email:"",notes:"1040 team member. Distinct from Kavindu in Tax."},
+      {name:"Piumi Imalsha",role:"Individual Tax",area:"Individual Tax",email:"",notes:"1040 tax preparation team."},
+      {name:"Dulani",role:"Individual Tax",area:"Individual Tax",email:"",notes:"1040 tax preparation team."},
     ]
   },
   departed: {
@@ -590,9 +649,97 @@ function TeamTab() {
   );
 }
 
+function TicketPipelinesTab() {
+  var _ex = useState(null); var expanded = _ex[0]; var setExpanded = _ex[1];
+  var _vw = useState("overview"); var view = _vw[0]; var setView = _vw[1];
+  var ssC = function(s){return s===1?"rgba(16,185,129,0.15)":s===0?"rgba(255,255,255,0.04)":"rgba(234,179,8,0.15)";};
+  var ssT = function(s){return s===1?C.green:s===0?"#6b7280":C.amber;};
+  var ssL = function(s){return s===1?"Yes":s===0?"No":"Partial";};
+  return (
+    <div style={{display:"flex",gap:0,minHeight:"60vh"}}>
+      <div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:20,alignSelf:"flex-start"}}>
+        <div style={{padding:"8px 16px",marginBottom:8}}>
+          <div style={{display:"flex",gap:8}}>
+            <div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.cyan,letterSpacing:"0.05em"}}>90-DAY</div><div style={{fontSize:20,fontWeight:500}}>1,508</div></div>
+            <div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.red,letterSpacing:"0.05em"}}>UNOWNED</div><div style={{fontSize:20,fontWeight:500}}>7 / 9</div></div>
+          </div>
+        </div>
+        {["overview","gaps","recs"].map(function(v){return(
+          <div key={v} onClick={function(){setView(v);setExpanded(null);}} className={"nav-item"+(view===v?" active":"")} style={{padding:"8px 16px",fontSize:13}}>
+            {v==="overview"?"Pipeline Inventory":v==="gaps"?"Gap Analysis":"Priority Recs"}
+          </div>
+        );})}
+      </div>
+      <div style={{flex:1,padding:"4px 24px 40px"}}>
+        <div className="info-card" style={{borderRadius:8,padding:"14px 18px",marginBottom:16,borderColor:"rgba(6,182,212,0.3)"}}>
+          <div style={{fontSize:13,color:"#06b6d4",lineHeight:"1.7"}}>System-generated ticket pipelines produced <strong>~1,508 tickets in 90 days</strong> (~17/day) across 9 non-support pipelines. Most lack ownership, structured resolution, and self-service paths. The <strong>Unit pipeline's in-app task + auto email pattern</strong> is the proven model to replicate everywhere.</div>
+          <div className="mono" style={{fontSize:10,color:"#6b7280",marginTop:8,letterSpacing:"0.03em"}}>PERIOD: DEC 18 2025 &ndash; MAR 18 2026 &middot; AUTHOR: DAVIS TROUTMAN + CLAUDE &middot; DATA: HUBSPOT, CONFLUENCE, SLACK</div>
+        </div>
+      {view==="overview" && (<div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+          {[{v:"516",l:"FORMATIONS",c:C.blue},{v:"362",l:"UNIT (BANKING)",c:C.green},{v:"263",l:"GUSTO (PAYROLL)",c:C.red}].map(function(s,i){return(
+            <div key={i} className="stat-card"><div className="mono" style={{fontSize:9,color:s.c,letterSpacing:"0.05em"}}>{s.l}</div><div style={{fontSize:24,fontWeight:500,marginTop:4}}>{s.v}</div></div>
+          );})}
+        </div>
+        {tpPipelines.map(function(p,i){var isExp=expanded===p.name;return(
+          <div key={i} className="card" style={{marginBottom:8,overflow:"hidden",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
+            <div onClick={function(){setExpanded(isExp?null:p.name);}} className="expand-btn" style={{padding:"12px 14px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:p.c}}></span><span style={{fontWeight:500,fontSize:14}}>{p.name}</span><span className="mono step-badge" style={{color:p.c,border:"1px solid "+p.c+"33",background:p.c+"1a"}}>{p.mat}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:12}}><span className="mono" style={{fontSize:12,color:"#9ca3af"}}>{p.vol}</span><span style={{fontSize:11,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span></div>
+              </div>
+              <div style={{display:"flex",gap:16,marginTop:4,marginLeft:16}}><span style={{fontSize:11,color:"#6b7280"}}>Owner: {p.owner}</span><span style={{fontSize:11,color:"#6b7280"}}>Self-service: {p.ss}</span></div>
+            </div>
+            {isExp && (<div style={{padding:"0 14px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+              <div className="mono" style={{fontSize:10,color:"#9ca3af",margin:"10px 0 6px",letterSpacing:"0.03em"}}>KEY FINDINGS</div>
+              {p.findings.map(function(f,j){return(<div key={j} style={{fontSize:12,color:"#9ca3af",marginBottom:6,paddingLeft:12,borderLeft:"2px solid rgba(255,255,255,0.06)",lineHeight:"1.6"}}>{f}</div>);})}
+              {p.reasons.length > 1 && (<div>
+                <div className="mono" style={{fontSize:10,color:"#9ca3af",margin:"10px 0 6px",letterSpacing:"0.03em"}}>REASON DISTRIBUTION</div>
+                <div className="card" style={{padding:10}}>{p.reasons.map(function(r,j){return(
+                  <div key={j} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:j<p.reasons.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                    <span className="mono" style={{fontSize:11,color:"#9ca3af"}}>{r.r}</span>
+                    <div style={{display:"flex",gap:10,flexShrink:0}}><span className="mono" style={{fontSize:11,color:"#f0f0ff"}}>{r.ct}</span><span className="mono" style={{fontSize:10,padding:"1px 6px",borderRadius:3,background:ssC(r.s),color:ssT(r.s)}}>{ssL(r.s)}</span></div>
+                  </div>);})}</div>
+              </div>)}
+              {p.recs.length > 0 && (<div>
+                <div className="mono" style={{fontSize:10,color:"#9ca3af",margin:"10px 0 6px",letterSpacing:"0.03em"}}>RECOMMENDATIONS</div>
+                {p.recs.map(function(r,j){var pc=r.p==="P0"?C.red:r.p==="P1"?C.orange:C.blue;return(
+                  <div key={j} style={{background:pc+"0f",border:"1px solid "+pc+"33",borderRadius:6,padding:"8px 12px",marginBottom:6}}>
+                    <div style={{display:"flex",alignItems:"baseline",gap:6}}><span className="mono" style={{fontSize:10,fontWeight:600,color:pc}}>{r.p}</span><span style={{fontSize:12,color:"#f0f0ff"}}>{r.t}</span></div>
+                    <div style={{fontSize:11,color:"#6b7280",marginTop:3}}>{r.im}</div>
+                  </div>);})}
+              </div>)}
+            </div>)}
+          </div>);})}
+        <div className="info-card" style={{borderRadius:8,padding:"12px 16px",marginTop:12}}>
+          <div style={{fontSize:12,fontWeight:500,color:"#06b6d4",marginBottom:4}}>{"\u{1F50E}"} Formations Pipeline Family Note</div>
+          <div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>Three pipelines handle business entity work with poorly-defined boundaries: <strong style={{color:"#f0f0ff"}}>Formations</strong> (516, catch-all), <strong style={{color:"#f0f0ff"}}>Business Formation</strong> (30, post-filing verification), and <strong style={{color:"#f0f0ff"}}>Business Verification</strong> (12, existing business verification). Business Verification and certain Formations hold tickets cover essentially the same scenario. Strong consolidation candidate under P2.</div>
+        </div>
+      </div>)}
+      {view==="gaps" && (<div>{tpGaps.map(function(g,i){return(
+        <div key={i} className="card" style={{padding:16,marginBottom:10}}>
+          <div style={{fontWeight:500,fontSize:14,marginBottom:8}}>{g.ic} {g.ti}</div>
+          <div style={{fontSize:12,color:"#9ca3af",marginBottom:8,lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Gap:</strong> {g.g}</div>
+          <div style={{fontSize:12,color:C.green,background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.15)",borderRadius:6,padding:"8px 12px",lineHeight:"1.6"}}><strong>Fix:</strong> {g.f}</div>
+        </div>);})}</div>)}
+      {view==="recs" && (<div>
+        {tpRecs.map(function(r,i){return(
+          <div key={i} style={{background:r.c+"0f",border:"1px solid "+r.c+"33",borderRadius:8,padding:16,marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:6}}><span className="mono step-badge" style={{color:r.c,border:"1px solid "+r.c+"33",background:r.c+"1a"}}>{r.p}</span><span style={{fontWeight:500,fontSize:14,color:r.c}}>{r.t}</span></div>
+            <div style={{fontSize:12,color:"#9ca3af",marginBottom:4,lineHeight:"1.6"}}>{r.d}</div>
+            <div style={{fontSize:11,color:"#6b7280"}}>{r.im}</div>
+          </div>);})}
+        <div className="card" style={{padding:"12px 16px",marginTop:12,fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Next steps:</strong> Review with Ran, Brad (Head of Ops), and Mark. Prioritize P0 recommendations. Schedule working session with Elena to align on Gusto self-service timeline.</div>
+      </div>)}
+      </div>
+    </div>
+  );
+}
+
+
 function App() {
   const [tab, setTab] = useState("onboarding");
-  const tabs = [{id:"onboarding",label:"ONBOARDING GUIDE"},{id:"workflows",label:"WORKFLOW APPENDIX"},{id:"glossary",label:"ACRONYM GLOSSARY"},{id:"team",label:"TEAM DIRECTORY"}];
+  const tabs = [{id:"onboarding",label:"ONBOARDING GUIDE"},{id:"workflows",label:"WORKFLOW APPENDIX"},{id:"pipelines",label:"TICKET PIPELINES"},{id:"glossary",label:"ACRONYM GLOSSARY"},{id:"team",label:"TEAM DIRECTORY"}];
   return (
     <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 24px 60px"}}>
       <div style={{marginBottom:20}}>
@@ -611,10 +758,11 @@ function App() {
       </div>
       {tab === "onboarding" && <OnboardingTab />}
       {tab === "workflows" && <WorkflowTab />}
+      {tab === "pipelines" && <TicketPipelinesTab />}
       {tab === "glossary" && <GlossaryTab />}
       {tab === "team" && <TeamTab />}
       <div className="mono" style={{marginTop:24,fontSize:9,color:"rgba(255,255,255,0.15)",borderTop:"1px solid rgba(255,255,255,0.04)",paddingTop:12,letterSpacing:"0.05em"}}>
-        SOURCES: NOTION (FULFILLMENT - FL, LEVEL 1/2/3 SUPPORT) + CONFLUENCE (FL MIGRATION, 22 PAGES) · MARCH 2026
+        SOURCES: NOTION + CONFLUENCE (FL MIGRATION) + HUBSPOT TICKET AUDIT (DAVIS TROUTMAN) · MARCH 2026
       </div>
     </div>
   );
