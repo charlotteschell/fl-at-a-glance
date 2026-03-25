@@ -59,31 +59,635 @@ input[type="text"]:focus{border-color:rgba(6,182,212,0.4);outline:none}
 <div id="root"></div>
 <script type="text/babel">
 const { useState } = React;
+
 const C = {cyan:"#06b6d4",blue:"#3b82f6",green:"#10b981",amber:"#eab308",red:"#f43f5e",purple:"#a855f7",orange:"#f97316"};
+
+// ==================== ONBOARDING DATA ====================
 const onboardingSections = [
-  {id:"strategy",label:"\u{1F680} What's next",highlight:true,content:()=>(<div><div className="info-card" style={{borderRadius:8,padding:"14px 18px",marginBottom:16,borderColor:"rgba(6,182,212,0.3)"}}><div style={{fontSize:13,color:"#06b6d4",lineHeight:"1.7"}}>Ran has proposed <strong>3 automation initiatives</strong> that would fundamentally shift how the fulfillment operation works — reducing dependency on the ~45-person Sri Lanka team by automating the most labor-intensive, repetitive workflows. All three share the same thesis: <strong>shift the FL team from doing the work to overseeing automated systems that do the work.</strong></div></div><div className="card" style={{padding:"14px 18px",marginBottom:16}}><div style={{fontSize:12,fontWeight:500,color:"#f0f0ff",marginBottom:8}}>Why these 3 areas?</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}><div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.blue,letterSpacing:"0.05em"}}>INCORPORATION</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Highest-volume config workflow (~1,400/yr)</div></div><div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.green,letterSpacing:"0.05em"}}>BOOKS REVIEW</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Largest team by headcount (29-33 people)</div></div><div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.purple,letterSpacing:"0.05em"}}>NOTICE HANDLING</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Most complex cross-team pipeline (12 stages)</div></div></div><div style={{fontSize:12,color:"#6b7280",marginTop:10,lineHeight:"1.6"}}>If all three succeed, the operation can handle the same or higher volume with significantly fewer fulfillment personnel — shifting gsk's model from offshore labor scaling to automation-first.</div></div>{[{n:"1. Incorporation Automation",o:"Camille",cls:"init-blue",c:C.blue,today:"Nawanjana's config team (~5 people) manually submits ~1,400 incorporations/yr through IncFile/MyCorp — filling out forms, verifying entity names at SOS, checking addresses, shuffling documents into ShareFile. When info is missing, the Lettuce US team manually follows up with customers via email, tracks in Excel, and follows up within 48hrs.",think:"This is attacking the highest-volume config workflow. 1,400 incorporations × multiple manual touchpoints per filing = massive labor sink. If you can automate the data flow from customer intake (FFM/Lettuce Summary) → filing service (Bizee) → document storage, you eliminate a huge chunk of manual work.",planned:[{l:"a) Automate the Bizee online setup flow",d:"Bizee appears to be a new/replacement incorporation service (like IncFile). Instead of FL staff manually filling out forms on the dashboard, automate as much of the submission as possible. This directly reduces Nawanjana's SL config team headcount needs."},{l:"b) Automate follow-ups",d:"When info is missing, automate customer contact instead of manual follow-up by the Lettuce US team. Reduces US-side CS personnel needs (separate from the SL fulfillment headcount reduction in 1a). So this initiative targets both sides of the operation."}]},{n:"2. Books Review Automation",o:"Brad",cls:"init-green",c:C.green,today:"Harsha's accounting team of 29-33 people manually reviews every customer's P&L (income verification, expense verification, payroll verification), balance sheet (bank accounts, fixed assets, capital stock, retained earnings, distributions), and does vendor dedup and tax payment checks. The BOB ratio target is 75 accounts per bookkeeper.",think:"This is attacking the largest department by headcount. If you can automate the review checklist, you could dramatically increase the BOB ratio beyond 75 — maybe to 150-200+ per bookkeeper. The second part (product changes) is about prevention vs. detection, which is a more durable solution.",planned:[{l:"a) Automate the review, rules, and output",d:"Instead of bookkeepers manually checking every P&L line item ('is this income or a shareholder contribution?', 'is this vendor duplicated?', 'does retained earnings match last year's 1120S?'), build rules-based automation that does it. This is where Hurdlr's automated categorization was supposed to help, but Ran is pushing further."},{l:"b) Recommend product changes to reduce drift",d:"This is the more strategic piece. Today the books drift from expected rules because the product (FFM/Hurdlr) doesn't enforce enough constraints at the point of data entry. Brad should identify where product changes would prevent errors upstream rather than catching them in review. Prevention vs. detection."}]},{n:"3. Notice Handling Automation",o:"Camille",cls:"init-purple",c:C.purple,today:"The PRO Notice Pipeline has 12 manual stages. Notices come in via customer uploads or the Stable mailbox, get manually triaged by the FL team, and route through multiple escalation stages (Calsavers, Back to SL, Escalated to Pro, Escalated to Agency, etc.). M1-M4 milestones are already planned for intake automation.",think:"This accelerates the M1-M4 roadmap already documented. M1 (webhook automation) is about intake; Ran is pushing further into M2 (automated screening) and beyond — actually resolving notices, not just classifying them.",planned:[{l:"a) Automate classification into tiers",d:"Instead of FL staff manually reading each notice and deciding importance/tier, build automated classification. Some notices are urgent (IRS penalties), some routine (annual renewals), some informational."},{l:"b) Automate handling of simple notice types",d:"Many notices probably have standard resolution paths. If you can identify which types don't need human judgment, auto-resolve them without FL personnel touching them at all. Moves from just classifying (M2) to actually resolving notices."}]}].map((init,i)=>(<div key={i} className={init.cls} style={{borderRadius:8,padding:16,marginBottom:14}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}><span style={{fontWeight:500,fontSize:14,color:init.c}}>{init.n}</span><span className="step-badge" style={{color:init.c,border:"1px solid "+init.c+"33",background:init.c+"1a"}}>Owner: {init.o}</span></div><div style={{fontSize:12,color:"#9ca3af",marginBottom:10,lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Today:</strong> {init.today}</div>{init.planned.map((p,j)=>(<div key={j} className="inner-card"><div style={{fontSize:12,fontWeight:500,color:init.c,marginBottom:3}}>{p.l}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{p.d}</div></div>))}<div style={{marginTop:8,padding:"10px 14px",background:"rgba(255,255,255,0.02)",borderRadius:6,fontSize:12,color:"#6b7280",lineHeight:"1.6"}}><strong style={{color:"#9ca3af"}}>How to think about it:</strong> {init.think}</div></div>))}<div className="warn-card" style={{borderRadius:8,padding:"12px 16px",fontSize:12,color:"#eab308",lineHeight:"1.6"}}><strong>Open questions for kick-off:</strong> <span style={{color:"#9ca3af"}}>Who is Brad? He's not in any FL docs — new hire or US-side product/eng? · Is Bizee replacing IncFile as the incorporation vendor? · What's the timeline expectation? These are significant engineering efforts. · How does this relate to the existing M1-M4 milestones on the PRO Notice Pipeline? · Does "minimize fulfillment personnel" mean reduction, redeployment, or just not needing to hire as volume grows?</span></div></div>)},
-  {id:"overview",label:"The big picture",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Formations (now Lettuce) provides <strong style={{color:"#f0f0ff"}}>S-Corp formation, bookkeeping, payroll, and tax services</strong> to US small business owners. The fulfillment engine is a team in <strong style={{color:"#f0f0ff"}}>Sri Lanka (gsk)</strong> handling the actual work, while a smaller US team manages escalations and client relationships.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>{[{l:"Sri Lanka (FL)",v:"~45 staff",s:"Config, Accounting, Tax, Support"},{l:"US Team",v:"~10 staff",s:"CSMs, Escalations, Sales"},{l:"Customers",v:"2,300+",s:"S-Corps, LLCs, Sole Props"},{l:"Products",v:"4 tiers",s:"Platinum, Standard, Digital, BIB"}].map((c,i)=>(<div key={i} className="stat-card"><div className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.05em",textTransform:"uppercase"}}>{c.l}</div><div style={{fontSize:22,fontWeight:500,marginTop:4}}>{c.v}</div><div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{c.s}</div></div>))}</div><div className="info-card" style={{borderRadius:8,padding:"12px 16px",fontSize:13,color:"#06b6d4"}}><strong>Key context:</strong> <span style={{color:"#9ca3af"}}>gsk's vision is to "redefine U.S. tax and accounting fulfilment services" — building a scalable offshore operation handling 90%+ of work, with US team focused on client relationships and complex escalations.</span></div></div>)},
-  {id:"departments",label:"Departments",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>The FL team has <strong style={{color:"#f0f0ff"}}>5 core departments</strong> plus supporting services, each with a Sri Lanka department head.</p>{[{n:"Configuration",o:"Nawanjana",c:C.blue,w:"New customer setup — incorporations (IncFile/MyCorp/Swyft), S-elections (Form 2553), EIN, payroll state registration, amendments, annual renewals.",s:"~1,400 incorporations/yr"},{n:"Accounting",o:"Harsha",c:C.green,w:"Monthly bookkeeping via Hurdlr (replaced Xero). P&L reviews, balance sheet reconciliation, transaction categorization. BOB ratio target: 75 per bookkeeper.",s:"~2,347 subscriptions"},{n:"Business Tax (1120S)",o:"Dhilan",c:C.amber,w:"S-Corp tax return prep and filing. 60% by deadline, 95% by extension. All produced in Sri Lanka.",s:"3→5 preparers"},{n:"Individual Tax (1040)",o:"Shiran / Salinda",c:C.orange,w:"Personal returns (Schedule C/E). Handles KMT and Lettuce customers too. 50% by deadline.",s:"570→950 returns"},{n:"CS Support",o:"Dushini",c:C.purple,w:"Help desk / email / chat. Triages HubSpot tickets into Level 1/2/3. First line of defense for all customer questions.",s:"4-person SL team + US CSMs"}].map((d,i)=>(<div key={i} className="dept-border" style={{borderColor:d.c}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontWeight:500,fontSize:14}}>{d.n}</span><span className="mono" style={{fontSize:10,color:d.c,letterSpacing:"0.03em"}}>{d.o}</span></div><div style={{fontSize:12,color:"#9ca3af",marginTop:4,lineHeight:"1.6"}}>{d.w}</div><div style={{fontSize:11,color:"#6b7280",marginTop:4}}>{d.s}</div></div>))}<p style={{fontSize:12,color:"#6b7280",marginTop:8}}><strong style={{color:"#9ca3af"}}>Supporting:</strong> Tax Ops (Wajiva), Doc Processing (Wajiva), Controller Support</p></div>)},
-  {id:"support",label:"Support tiers",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>3-tier model: resolve most in SL, escalate complex cases to US CSMs.</p>{[{l:"Level 1 — SL Support",cls:"tier-1",c:C.green,h:"Standard email templates · Account lookups (Gusto, FFM, HubSpot) · WorkNet AI answers · Doc requests (W2, P&L) · Bank status · State renewals · Meeting scheduling",t:"HubSpot, WorkNet AI, Loom"},{l:"Level 2 — CSA Role",cls:"tier-2",c:C.blue,h:"Complex escalations with comments · Upsell identification · HubSpot ↔ AI chat handoffs · Payroll cancellations (TBD) · Billing calls (TBD)",t:"HubSpot, Slack → US CS"},{l:"Level 3 — US CSMs",cls:"tier-4",c:C.red,h:"Tax advisory · Retirement contributions · Complex tax estimates · Cancellations · Account strategy",t:"Direct client meetings, Expert consults"}].map((t,i)=>(<div key={i} className={t.cls} style={{borderRadius:8,padding:"14px 18px",marginBottom:10}}><div style={{fontWeight:500,fontSize:14,color:t.c,marginBottom:6}}>{t.l}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.7"}}>{t.h}</div><div style={{fontSize:11,color:"#6b7280",marginTop:8}}>Tools: {t.t}</div></div>))}</div>)},
-  {id:"escalation",label:"Escalation flow",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Escalation is a <strong style={{color:"#f0f0ff"}}>4-step path</strong> with a critical middle layer between SL CS Support and the US team.</p>{[{s:"1",l:"SL CS handles directly",cls:"tier-1",c:C.green,how:"Draft response → Dushini reviews → sends to customer → marks Resolved.",ch:"HubSpot ticket",ex:"Account lookups, doc requests, bank status, state renewals, meeting scheduling, tax status updates, OIL questions"},{s:"2",l:"SL CS + US guidance via Slack",cls:"tier-2",c:C.blue,how:"SL team adds comments to ticket, notifies US CS via Slack for guidance. SL still sends final response.",ch:"HubSpot + Slack to US CS",ex:"Tickets needing specialist knowledge, complex account questions, upsell identification"},{s:"3",l:"FL department escalation via Teams",cls:"tier-3",c:C.purple,how:"Sends acknowledgment to customer (48hr SLA), assigns task via Microsoft Teams to FL dept head.",ch:"Customer email + Teams task",ex:"Accounting → Harsha · 1120S → Dhilan · 1040 → Shiran/Salinda · Config → Nawanjana"},{s:"4",l:"US CSM escalation",cls:"tier-4",c:C.red,how:"Only issues requiring US-based expertise reach CSMs.",ch:"Slack escalation to US CS",ex:"Tax advisory · Retirement contributions · Complex tax estimates · Cancellations · Account strategy"}].map((s,i)=>(<div key={i} className={s.cls} style={{borderRadius:8,padding:"14px 18px",marginBottom:10}}><div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:8}}><span className="step-badge" style={{background:s.c+"1a",color:s.c,border:"1px solid "+s.c+"33"}}>STEP {s.s}</span><span style={{fontWeight:500,fontSize:14,color:s.c}}>{s.l}</span></div><div style={{fontSize:12,color:"#9ca3af",marginBottom:4,lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>How:</strong> {s.how}</div><div style={{fontSize:12,color:"#6b7280",marginBottom:4}}><strong style={{color:"#9ca3af"}}>Channel:</strong> {s.ch}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Examples:</strong> {s.ex}</div></div>))}<div className="card" style={{padding:"12px 16px",fontSize:12,color:"#6b7280",lineHeight:"1.6"}}><strong style={{color:"#9ca3af"}}>Comms mapping:</strong> Slack = SL→US · Teams = SL CS→SL FL depts · HubSpot = system of record · Email = customer-facing</div></div>)},
-  {id:"pipelines",label:"Pipelines",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:12}}>All work flows through <strong style={{color:"#f0f0ff"}}>HubSpot ticket pipelines</strong>. Each pipeline is a categorized workflow queue — tickets are created based on work type, then move through defined stages.</p>{[{g:"Tax Pipelines",o:"Shiran/Salinda (1040) · Dhilan (1120S)",cls:"tag-tax",items:[{n:"1040 Personal Tax",d:"Individual returns"},{n:"1040 PRO",d:"PRO engagements"},{n:"1120S Business Tax",d:"S-Corp returns"},{n:"1065 Partnership",d:"Partnership returns"},{n:"1120S Only",d:"Business-tax-only"}]},{g:"Accounting Pipelines",o:"Harsha",cls:"tag-acct",items:[{n:"Monthly Accounting",d:"Recurring bookkeeping"},{n:"Hurdlr Migration",d:"Xero to Hurdlr"},{n:"Banking Status",d:"Bank categorization issues"}]},{g:"Configuration Pipelines",o:"Nawanjana + cross-team",cls:"tag-config",items:[{n:"INC - Incorporation",d:"New company formation"},{n:"ELV - Existing LLC",d:"LLC verification + S-election"},{n:"LET - Ad-Hoc Request",d:"Amendments + misc"},{n:"PRO Notice Pipeline",d:"Customer notices (12 stages)"},{n:"Tax Notice (TN)",d:"IRS/state tax notices"},{n:"Payroll Notice (PN)",d:"Payroll notices"},{n:"1099 Pipeline",d:"1099 filings"},{n:"Catch-up Payroll",d:"EOY payroll catch-ups"}]}].map((g,i)=>(<div key={i} className="card" style={{padding:16,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}><span style={{fontWeight:500,fontSize:14}}>{g.g}</span><span className={"mono step-badge "+g.cls}>{g.o}</span></div>{g.items.map((p,j)=>(<div key={j} className="inner-card" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span className="mono" style={{fontSize:12,fontWeight:500}}>{p.n}</span><span style={{fontSize:11,color:"#6b7280"}}>{p.d}</span></div>))}</div>))}</div>)},
-  {id:"daily",label:"Daily ops",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Typical day for CS Support in Sri Lanka (US night shift).</p>{[{t:"START",task:"Follow up unresolved requests",d:"Check yesterday's items first. Verify responses sent. Courtesy email if >48hrs."},{t:"MORNING",task:"Review HubSpot tickets",d:"Filter out CSM Review, Platinum, Config, Pro. Draft → Dushini reviews → send. Track in Excel."},{t:"ALL DAY",task:"Monitor live chat",d:"Handle: tax status, docs, OIL, bank, renewals, payroll, meetings. Escalate: retirement, tax estimates, cancellations."},{t:"AS NEEDED",task:"Route escalations",d:"Expertise → Slack US CS. FL escalation → acknowledge (48hr SLA), assign task via Teams."},{t:"END",task:"Update tracking",d:"Excel tracker. Ticket statuses: Resolved / Escalated to FL / Waiting on Us."}].map((s,i)=>(<div key={i} style={{display:"flex",gap:14,marginBottom:16}}><div className="mono" style={{minWidth:80,fontSize:10,fontWeight:500,color:"#6b7280",paddingTop:3,letterSpacing:"0.05em"}}>{s.t}</div><div style={{flex:1,borderLeft:"1px solid rgba(255,255,255,0.06)",paddingLeft:14}}><div style={{fontWeight:500,fontSize:14,marginBottom:2}}>{s.task}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{s.d}</div></div></div>))}</div>)},
-  {id:"lettuce",label:"Lettuce processes",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Lettuce is a partner brand. FL handles <strong style={{color:"#f0f0ff"}}>7 key configuration processes</strong>.</p>{[{n:"Incorporation",d:"IncFile (LLCs) or MyCorp (professional). Verify entity name at SOS + address. Save docs in ShareFile, notify Melissa."},{n:"2553 S-Election",d:"New LLCs: Standard 2553, fax to IRS (date = incorporation date). Existing: <75 days → Standard; >75 → 2553+8832 (late)."},{n:"Payroll Setup",d:"State-by-state: Withholding + Unemployment Insurance. WA & AK: email Gusto instead."},{n:"Annual Renewal",d:"CA only until 03/2025 → now all states. Same as Formations minus customer comms."},{n:"Amendments",d:"Name/owner/address/industry via LET pipeline. Check state site → online or paper."},{n:"OA & W-9",d:"Post-incorporation: download IncFile docs → fill OA + W-9 → save to ShareFile."},{n:"Monthly Review",d:"Full QA: P&L, balance sheet, vendor dedup, tax payment accuracy."}].map((p,i)=>(<div key={i} style={{marginBottom:12}}><div style={{fontWeight:500,fontSize:14}}>{p.n}</div><div style={{fontSize:12,color:"#9ca3af",marginTop:3,lineHeight:"1.6"}}>{p.d}</div></div>))}</div>)},
-  {id:"tools",label:"Tools",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>The operation's tech stack.</p>{[{t:"HubSpot",u:"Central CRM + tickets. All pipelines, customer records, workflows."},{t:"Hurdlr",u:"Automated bookkeeping. Replaced Xero. Bank feeds, categorization, P&L."},{t:"Gusto",u:"Payroll. Employee setup, runs, withholding."},{t:"FFM",u:"Customer platform. Onboarding data, doc uploads, profiles."},{t:"ShareFile",u:"Doc storage (being replaced by formations.lettuce.co)."},{t:"IncFile/MyCorp",u:"External incorporation filing services."},{t:"WorkNet AI",u:"Internal knowledge base for CS quick answers."},{t:"Slack/Teams",u:"Comms. Slack for SL→US escalations. Teams for FL tasks."},{t:"SafeSend",u:"Tax return signatures. Automation planned."}].map((t,i)=>(<div key={i} style={{display:"flex",gap:14,marginBottom:8,alignItems:"baseline"}}><span className="mono" style={{minWidth:110,fontSize:12,color:C.cyan,fontWeight:500}}>{t.t}</span><span style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{t.u}</span></div>))}</div>)},
-  {id:"issues",label:"Known issues",content:()=>(<div><p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Active issues — important context for new team members.</p>{[{i:"OIL publishing delays",d:"2025 OILs planned Dec, started mid-Jan. Peak overload. Fix: start 2026 from December."},{i:"No vehicle expense process",d:"No agreed process for actual vehicle expenses. Need FFM update or default to mileage."},{i:"CS team gap",d:"Nethni no longer active. Team at 3: Dushini, Ashini, Kalani."}].map((is,j)=>(<div key={j} className="warn-card" style={{borderRadius:8,padding:"10px 14px",marginBottom:8}}><div style={{fontWeight:500,fontSize:12,color:"#eab308"}}>{is.i}</div><div style={{fontSize:11,color:"#9ca3af",marginTop:3,lineHeight:"1.5"}}>{is.d}</div></div>))}<div style={{fontWeight:500,fontSize:14,margin:"16px 0 8px"}}>Product bugs</div>{["SafeSend Automation — feature request","BUH OIL bug — blocking","Dependent SSN not visible (1040)","Duplicate doc uploads","Tasks not creating for large batches","Estimated Tax OIL item — design issue"].map((b,i)=>(<div key={i} style={{fontSize:12,color:"#9ca3af",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{b}</div>))}</div>)}
+    {id:"strategy",label:"\u{1F680} What's next",highlight:true,content:()=>(
+    <div>
+      <div className="info-card" style={{borderRadius:8,padding:"14px 18px",marginBottom:16,borderColor:"rgba(6,182,212,0.3)"}}>
+        <div style={{fontSize:13,color:"#06b6d4",lineHeight:"1.7"}}>Ran has proposed <strong>3 automation initiatives</strong> that would fundamentally shift how the fulfillment operation works — reducing dependency on the ~45-person Sri Lanka team by automating the most labor-intensive, repetitive workflows. All three share the same thesis: <strong>shift the FL team from doing the work to overseeing automated systems that do the work.</strong></div>
+      </div>
+      <div className="card" style={{padding:"14px 18px",marginBottom:16}}>
+        <div style={{fontSize:12,fontWeight:500,color:"#f0f0ff",marginBottom:8}}>Why these 3 areas?</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+          <div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.blue,letterSpacing:"0.05em"}}>INCORPORATION</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Highest-volume config workflow (~1,400/yr)</div></div>
+          <div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.green,letterSpacing:"0.05em"}}>BOOKS REVIEW</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Largest team by headcount (29-33 people)</div></div>
+          <div className="stat-card" style={{padding:10}}><div className="mono" style={{fontSize:9,color:C.purple,letterSpacing:"0.05em"}}>NOTICE HANDLING</div><div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Most complex cross-team pipeline (12 stages)</div></div>
+        </div>
+        <div style={{fontSize:12,color:"#6b7280",marginTop:10,lineHeight:"1.6"}}>If all three succeed, the operation can handle the same or higher volume with significantly fewer fulfillment personnel — shifting gsk's model from offshore labor scaling to automation-first.</div>
+      </div>
+      {[{n:"1. Incorporation Automation",o:"Camille",cls:"init-blue",c:C.blue,
+        today:"Nawanjana's config team (~5 people) manually submits ~1,400 incorporations/yr through IncFile/MyCorp — filling out forms, verifying entity names at SOS, checking addresses, shuffling documents into ShareFile. When info is missing, the Lettuce US team manually follows up with customers via email, tracks in Excel, and follows up within 48hrs.",
+        think:"This is attacking the highest-volume config workflow. 1,400 incorporations × multiple manual touchpoints per filing = massive labor sink. If you can automate the data flow from customer intake (FFM/Lettuce Summary) → filing service (Bizee) → document storage, you eliminate a huge chunk of manual work.",
+        planned:[
+          {l:"a) Automate the Bizee online setup flow",d:"Bizee appears to be a new/replacement incorporation service (like IncFile). Instead of FL staff manually filling out forms on the dashboard, automate as much of the submission as possible. This directly reduces Nawanjana's SL config team headcount needs."},
+          {l:"b) Automate follow-ups",d:"When info is missing, automate customer contact instead of manual follow-up by the Lettuce US team. Reduces US-side CS personnel needs (separate from the SL fulfillment headcount reduction in 1a). So this initiative targets both sides of the operation."}
+        ]},
+        {n:"2. Books Review Automation",o:"Brad",cls:"init-green",c:C.green,
+        today:"Harsha's accounting team of 29-33 people manually reviews every customer's P&L (income verification, expense verification, payroll verification), balance sheet (bank accounts, fixed assets, capital stock, retained earnings, distributions), and does vendor dedup and tax payment checks. The BOB ratio target is 75 accounts per bookkeeper.",
+        think:"This is attacking the largest department by headcount. If you can automate the review checklist, you could dramatically increase the BOB ratio beyond 75 — maybe to 150-200+ per bookkeeper. The second part (product changes) is about prevention vs. detection, which is a more durable solution.",
+        planned:[
+          {l:"a) Automate the review, rules, and output",d:"Instead of bookkeepers manually checking every P&L line item ('is this income or a shareholder contribution?', 'is this vendor duplicated?', 'does retained earnings match last year's 1120S?'), build rules-based automation that does it. This is where Hurdlr's automated categorization was supposed to help, but Ran is pushing further."},
+          {l:"b) Recommend product changes to reduce drift",d:"This is the more strategic piece. Today the books drift from expected rules because the product (FFM/Hurdlr) doesn't enforce enough constraints at the point of data entry. Brad should identify where product changes would prevent errors upstream rather than catching them in review. Prevention vs. detection."}
+        ]},
+        {n:"3. Notice Handling Automation",o:"Camille",cls:"init-purple",c:C.purple,
+        today:"The PRO Notice Pipeline has 12 manual stages. Notices come in via customer uploads or the Stable mailbox, get manually triaged by the FL team, and route through multiple escalation stages (Calsavers, Back to SL, Escalated to Pro, Escalated to Agency, etc.). M1-M4 milestones are already planned for intake automation.",
+        think:"This accelerates the M1-M4 roadmap already documented. M1 (webhook automation) is about intake; Ran is pushing further into M2 (automated screening) and beyond — actually resolving notices, not just classifying them.",
+        planned:[
+          {l:"a) Automate classification into tiers",d:"Instead of FL staff manually reading each notice and deciding importance/tier, build automated classification. Some notices are urgent (IRS penalties), some routine (annual renewals), some informational."},
+          {l:"b) Automate handling of simple notice types",d:"Many notices probably have standard resolution paths. If you can identify which types don't need human judgment, auto-resolve them without FL personnel touching them at all. Moves from just classifying (M2) to actually resolving notices."}
+        ]}
+      ].map((init,i)=>(<div key={i} className={init.cls} style={{borderRadius:8,padding:16,marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}><span style={{fontWeight:500,fontSize:14,color:init.c}}>{init.n}</span><span className="step-badge" style={{color:init.c,border:"1px solid "+init.c+"33",background:init.c+"1a"}}>Owner: {init.o}</span></div>
+        <div style={{fontSize:12,color:"#9ca3af",marginBottom:10,lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Today:</strong> {init.today}</div>
+        {init.planned.map((p,j)=>(<div key={j} className="inner-card"><div style={{fontSize:12,fontWeight:500,color:init.c,marginBottom:3}}>{p.l}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{p.d}</div></div>))}
+        <div style={{marginTop:8,padding:"10px 14px",background:"rgba(255,255,255,0.02)",borderRadius:6,fontSize:12,color:"#6b7280",lineHeight:"1.6"}}><strong style={{color:"#9ca3af"}}>How to think about it:</strong> {init.think}</div>
+      </div>))}
+      <div className="warn-card" style={{borderRadius:8,padding:"12px 16px",fontSize:12,color:"#eab308",lineHeight:"1.6"}}><strong>Open questions for kick-off:</strong> <span style={{color:"#9ca3af"}}>Who is Brad? He's not in any FL docs — new hire or US-side product/eng? · Is Bizee replacing IncFile as the incorporation vendor? · What's the timeline expectation? These are significant engineering efforts. · How does this relate to the existing M1-M4 milestones on the PRO Notice Pipeline? · Does "minimize fulfillment personnel" mean reduction, redeployment, or just not needing to hire as volume grows?</span></div>
+    </div>
+  )},
+  {id:"overview",label:"The big picture",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Formations (now Lettuce) provides <strong style={{color:"#f0f0ff"}}>S-Corp formation, bookkeeping, payroll, and tax services</strong> to US small business owners. The fulfillment engine is a team in <strong style={{color:"#f0f0ff"}}>Sri Lanka (gsk)</strong> handling the actual work, while a smaller US team manages escalations and client relationships.</p>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+        {[{l:"Sri Lanka (FL)",v:"~45 staff",s:"Config, Accounting, Tax, Support"},{l:"US Team",v:"~10 staff",s:"CSMs, Escalations, Sales"},{l:"Customers",v:"2,300+",s:"S-Corps, LLCs, Sole Props"},{l:"Products",v:"4 tiers",s:"Platinum, Standard, Digital, BIB"}].map((c,i)=>(
+          <div key={i} className="stat-card"><div className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.05em",textTransform:"uppercase"}}>{c.l}</div><div style={{fontSize:22,fontWeight:500,marginTop:4}}>{c.v}</div><div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{c.s}</div></div>
+        ))}
+      </div>
+      <div className="info-card" style={{borderRadius:8,padding:"12px 16px",fontSize:13,color:"#06b6d4"}}><strong>Key context:</strong> <span style={{color:"#9ca3af"}}>gsk's vision is to "redefine U.S. tax and accounting fulfilment services" — building a scalable offshore operation handling 90%+ of work, with US team focused on client relationships and complex escalations.</span></div>
+    </div>
+  )},
+  {id:"departments",label:"Departments",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>The FL team has <strong style={{color:"#f0f0ff"}}>5 core departments</strong> plus supporting services, each with a Sri Lanka department head.</p>
+      {[{n:"Configuration",o:"Nawanjana",c:C.blue,w:"New customer setup — incorporations (IncFile/MyCorp/Swyft), S-elections (Form 2553), EIN, payroll state registration, amendments, annual renewals.",s:"~1,400 incorporations/yr"},
+        {n:"Accounting",o:"Harsha",c:C.green,w:"Monthly bookkeeping via Hurdlr (replaced Xero). P&L reviews, balance sheet reconciliation, transaction categorization. BOB ratio target: 75 per bookkeeper.",s:"~2,347 subscriptions"},
+        {n:"Business Tax (1120S)",o:"Dhilan",c:C.amber,w:"S-Corp tax return prep and filing. 60% by deadline, 95% by extension. All produced in Sri Lanka.",s:"3→5 preparers"},
+        {n:"Individual Tax (1040)",o:"Shiran / Salinda",c:C.orange,w:"Personal returns (Schedule C/E). Handles KMT and Lettuce customers too. 50% by deadline.",s:"570→950 returns"},
+        {n:"CS Support",o:"Dushini",c:C.purple,w:"Help desk / email / chat. Triages HubSpot tickets into Level 1/2/3. First line of defense for all customer questions.",s:"4-person SL team + US CSMs"}
+      ].map((d,i)=>(<div key={i} className="dept-border" style={{borderColor:d.c}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontWeight:500,fontSize:14}}>{d.n}</span><span className="mono" style={{fontSize:10,color:d.c,letterSpacing:"0.03em"}}>{d.o}</span></div><div style={{fontSize:12,color:"#9ca3af",marginTop:4,lineHeight:"1.6"}}>{d.w}</div><div style={{fontSize:11,color:"#6b7280",marginTop:4}}>{d.s}</div></div>))}
+      <p style={{fontSize:12,color:"#6b7280",marginTop:8}}><strong style={{color:"#9ca3af"}}>Supporting:</strong> Tax Ops (Wajiva), Doc Processing (Wajiva), Controller Support</p>
+    </div>
+  )},
+  {id:"support",label:"Support tiers",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>3-tier model: resolve most in SL, escalate complex cases to US CSMs.</p>
+      {[{l:"Level 1 — SL Support",cls:"tier-1",c:C.green,h:"Standard email templates · Account lookups (Gusto, FFM, HubSpot) · WorkNet AI answers · Doc requests (W2, P&L) · Bank status · State renewals · Meeting scheduling",t:"HubSpot, WorkNet AI, Loom"},
+        {l:"Level 2 — CSA Role",cls:"tier-2",c:C.blue,h:"Complex escalations with comments · Upsell identification · HubSpot ↔ AI chat handoffs · Payroll cancellations (TBD) · Billing calls (TBD)",t:"HubSpot, Slack → US CS"},
+        {l:"Level 3 — US CSMs",cls:"tier-4",c:C.red,h:"Tax advisory · Retirement contributions · Complex tax estimates · Cancellations · Account strategy",t:"Direct client meetings, Expert consults"}
+      ].map((t,i)=>(<div key={i} className={t.cls} style={{borderRadius:8,padding:"14px 18px",marginBottom:10}}><div style={{fontWeight:500,fontSize:14,color:t.c,marginBottom:6}}>{t.l}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.7"}}>{t.h}</div><div style={{fontSize:11,color:"#6b7280",marginTop:8}}>Tools: {t.t}</div></div>))}
+    </div>
+  )},
+  {id:"escalation",label:"Escalation flow",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Escalation is a <strong style={{color:"#f0f0ff"}}>4-step path</strong> with a critical middle layer between SL CS Support and the US team.</p>
+      {[{s:"1",l:"SL CS handles directly",cls:"tier-1",c:C.green,how:"Draft response → Dushini reviews → sends to customer → marks Resolved.",ch:"HubSpot ticket",ex:"Account lookups, doc requests, bank status, state renewals, meeting scheduling, tax status updates, OIL questions"},
+        {s:"2",l:"SL CS + US guidance via Slack",cls:"tier-2",c:C.blue,how:"SL team adds comments to ticket, notifies US CS via Slack for guidance. SL still sends final response.",ch:"HubSpot + Slack to US CS",ex:"Tickets needing specialist knowledge, complex account questions, upsell identification"},
+        {s:"3",l:"FL department escalation via Teams",cls:"tier-3",c:C.purple,how:"Sends acknowledgment to customer (48hr SLA), assigns task via Microsoft Teams to FL dept head.",ch:"Customer email + Teams task",ex:"Accounting → Harsha · 1120S → Dhilan · 1040 → Shiran/Salinda · Config → Nawanjana"},
+        {s:"4",l:"US CSM escalation",cls:"tier-4",c:C.red,how:"Only issues requiring US-based expertise reach CSMs.",ch:"Slack escalation to US CS",ex:"Tax advisory · Retirement contributions · Complex tax estimates · Cancellations · Account strategy"}
+      ].map((s,i)=>(<div key={i} className={s.cls} style={{borderRadius:8,padding:"14px 18px",marginBottom:10}}>
+        <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:8}}><span className="step-badge" style={{background:s.c+"1a",color:s.c,border:"1px solid "+s.c+"33"}}>STEP {s.s}</span><span style={{fontWeight:500,fontSize:14,color:s.c}}>{s.l}</span></div>
+        <div style={{fontSize:12,color:"#9ca3af",marginBottom:4,lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>How:</strong> {s.how}</div>
+        <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}><strong style={{color:"#9ca3af"}}>Channel:</strong> {s.ch}</div>
+        <div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}><strong style={{color:"#f0f0ff"}}>Examples:</strong> {s.ex}</div>
+      </div>))}
+      <div className="card" style={{padding:"12px 16px",fontSize:12,color:"#6b7280",lineHeight:"1.6"}}><strong style={{color:"#9ca3af"}}>Comms mapping:</strong> Slack = SL→US · Teams = SL CS→SL FL depts · HubSpot = system of record · Email = customer-facing</div>
+    </div>
+  )},
+  {id:"pipelines",label:"Pipelines",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:12}}>All work flows through <strong style={{color:"#f0f0ff"}}>HubSpot ticket pipelines</strong>. Each pipeline is a categorized workflow queue — tickets are created based on work type, then move through defined stages.</p>
+      {[{g:"Tax Pipelines",o:"Shiran/Salinda (1040) · Dhilan (1120S)",cls:"tag-tax",items:[{n:"1040 Personal Tax",d:"Individual returns"},{n:"1040 PRO",d:"PRO engagements"},{n:"1120S Business Tax",d:"S-Corp returns"},{n:"1065 Partnership",d:"Partnership returns"},{n:"1120S Only",d:"Business-tax-only"}]},
+        {g:"Accounting Pipelines",o:"Harsha",cls:"tag-acct",items:[{n:"Monthly Accounting",d:"Recurring bookkeeping"},{n:"Hurdlr Migration",d:"Xero to Hurdlr"},{n:"Banking Status",d:"Bank categorization issues"}]},
+        {g:"Configuration Pipelines",o:"Nawanjana + cross-team",cls:"tag-config",items:[{n:"INC - Incorporation",d:"New company formation"},{n:"ELV - Existing LLC",d:"LLC verification + S-election"},{n:"LET - Ad-Hoc Request",d:"Amendments + misc"},{n:"PRO Notice Pipeline",d:"Customer notices (12 stages)"},{n:"Tax Notice (TN)",d:"IRS/state tax notices"},{n:"Payroll Notice (PN)",d:"Payroll notices"},{n:"1099 Pipeline",d:"1099 filings"},{n:"Catch-up Payroll",d:"EOY payroll catch-ups"}]}
+      ].map((g,i)=>(<div key={i} className="card" style={{padding:16,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}><span style={{fontWeight:500,fontSize:14}}>{g.g}</span><span className={"mono step-badge "+g.cls}>{g.o}</span></div>
+        {g.items.map((p,j)=>(<div key={j} className="inner-card" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span className="mono" style={{fontSize:12,fontWeight:500}}>{p.n}</span><span style={{fontSize:11,color:"#6b7280"}}>{p.d}</span></div>))}
+      </div>))}
+    </div>
+  )},
+  {id:"daily",label:"Daily ops",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Typical day for CS Support in Sri Lanka (US night shift).</p>
+      {[{t:"START",task:"Follow up unresolved requests",d:"Check yesterday's items first. Verify responses sent. Courtesy email if >48hrs."},
+        {t:"MORNING",task:"Review HubSpot tickets",d:"Filter out CSM Review, Platinum, Config, Pro. Draft → Dushini reviews → send. Track in Excel."},
+        {t:"ALL DAY",task:"Monitor live chat",d:"Handle: tax status, docs, OIL, bank, renewals, payroll, meetings. Escalate: retirement, tax estimates, cancellations."},
+        {t:"AS NEEDED",task:"Route escalations",d:"Expertise → Slack US CS. FL escalation → acknowledge (48hr SLA), assign task via Teams."},
+        {t:"END",task:"Update tracking",d:"Excel tracker. Ticket statuses: Resolved / Escalated to FL / Waiting on Us."}
+      ].map((s,i)=>(<div key={i} style={{display:"flex",gap:14,marginBottom:16}}><div className="mono" style={{minWidth:80,fontSize:10,fontWeight:500,color:"#6b7280",paddingTop:3,letterSpacing:"0.05em"}}>{s.t}</div><div style={{flex:1,borderLeft:"1px solid rgba(255,255,255,0.06)",paddingLeft:14}}><div style={{fontWeight:500,fontSize:14,marginBottom:2}}>{s.task}</div><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{s.d}</div></div></div>))}
+    </div>
+  )},
+  {id:"lettuce",label:"Lettuce processes",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Lettuce is a partner brand. FL handles <strong style={{color:"#f0f0ff"}}>7 key configuration processes</strong>.</p>
+      {[{n:"Incorporation",d:"IncFile (LLCs) or MyCorp (professional). Verify entity name at SOS + address. Save docs in ShareFile, notify Melissa."},
+        {n:"2553 S-Election",d:"New LLCs: Standard 2553, fax to IRS (date = incorporation date). Existing: <75 days → Standard; >75 → 2553+8832 (late)."},
+        {n:"Payroll Setup",d:"State-by-state: Withholding + Unemployment Insurance. WA & AK: email Gusto instead."},
+        {n:"Annual Renewal",d:"CA only until 03/2025 → now all states. Same as Formations minus customer comms."},
+        {n:"Amendments",d:"Name/owner/address/industry via LET pipeline. Check state site → online or paper."},
+        {n:"OA & W-9",d:"Post-incorporation: download IncFile docs → fill OA + W-9 → save to ShareFile."},
+        {n:"Monthly Review",d:"Full QA: P&L, balance sheet, vendor dedup, tax payment accuracy."}
+      ].map((p,i)=>(<div key={i} style={{marginBottom:12}}><div style={{fontWeight:500,fontSize:14}}>{p.n}</div><div style={{fontSize:12,color:"#9ca3af",marginTop:3,lineHeight:"1.6"}}>{p.d}</div></div>))}
+    </div>
+  )},
+  {id:"tools",label:"Tools",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>The operation's tech stack.</p>
+      {[{t:"HubSpot",u:"Central CRM + tickets. All pipelines, customer records, workflows."},{t:"Hurdlr",u:"Automated bookkeeping. Replaced Xero. Bank feeds, categorization, P&L."},{t:"Gusto",u:"Payroll. Employee setup, runs, withholding."},{t:"FFM",u:"Customer platform. Onboarding data, doc uploads, profiles."},{t:"ShareFile",u:"Doc storage (being replaced by formations.lettuce.co)."},{t:"IncFile/MyCorp",u:"External incorporation filing services."},{t:"WorkNet AI",u:"Internal knowledge base for CS quick answers."},{t:"Slack/Teams",u:"Comms. Slack for SL→US escalations. Teams for FL tasks."},{t:"SafeSend",u:"Tax return signatures. Automation planned."}].map((t,i)=>(
+        <div key={i} style={{display:"flex",gap:14,marginBottom:8,alignItems:"baseline"}}><span className="mono" style={{minWidth:110,fontSize:12,color:C.cyan,fontWeight:500}}>{t.t}</span><span style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{t.u}</span></div>
+      ))}
+    </div>
+  )},
+
+  {id:"issues",label:"Known issues",content:()=>(
+    <div>
+      <p style={{color:"#9ca3af",fontSize:14,lineHeight:"1.7",marginBottom:16}}>Active issues — important context for new team members.</p>
+      {[{i:"OIL publishing delays",d:"2025 OILs planned Dec, started mid-Jan. Peak overload. Fix: start 2026 from December."},{i:"No vehicle expense process",d:"No agreed process for actual vehicle expenses. Need FFM update or default to mileage."},{i:"CS team gap",d:"Nethni no longer active. Team at 3: Dushini, Ashini, Kalani."}].map((is,j)=>(
+        <div key={j} className="warn-card" style={{borderRadius:8,padding:"10px 14px",marginBottom:8}}><div style={{fontWeight:500,fontSize:12,color:"#eab308"}}>{is.i}</div><div style={{fontSize:11,color:"#9ca3af",marginTop:3,lineHeight:"1.5"}}>{is.d}</div></div>
+      ))}
+      <div style={{fontWeight:500,fontSize:14,margin:"16px 0 8px"}}>Product bugs</div>
+      {["SafeSend Automation — feature request","BUH OIL bug — blocking","Dependent SSN not visible (1040)","Duplicate doc uploads","Tasks not creating for large batches","Estimated Tax OIL item — design issue"].map((b,i)=>(
+        <div key={i} style={{fontSize:12,color:"#9ca3af",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{b}</div>
+      ))}
+    </div>
+  )}
 ];
-const wfCats = [{id:"config",label:"Configuration",owner:"Nawanjana",c:C.blue,workflows:[{id:"inc",name:"Incorporation (IncFile/MyCorp)",pipeline:"PRO - New Business Incorporation",trigger:"Customer submits company formation info",steps:["Determine routing: LLCs → IncFile | Professional → MyCorp | Unknown → Lettuce Team | TN state → hold","Pre-checks: Verify entity name at SOS + address on IncFile dashboard","Submit incorporation using Lettuce Summary details","If EIN fails: verify info accuracy (must match SSN card exactly), assign to CS team","Save IncFile docs in ShareFile folder","Notify Melissa with ShareFile link","Move ticket to 'Waiting on Incorporation'"],output:"Ticket in 'Waiting on Incorporation'"},{id:"2553",name:"2553 S-Election Filing",pipeline:"INC / ELV Pipeline",trigger:"Customer needs S-Corp election",steps:["NEW LLCs: Verify in INC pipeline at 'Incorporation Completed'","Cross-check: Lettuce Summary + Signature Packet + Inc docs","Prepare Standard Form 2553, fax to IRS","EXISTING LLCs: Verify in ELV pipeline at 'New'","If <75 days → Standard 2553 | If >75 days → 2553+8832 (Late)","US staff mails S-Election to IRS","Move ticket to 'Pending Payroll State Set Up'"],output:"S-Election filed",notes:"2024 Hold Rule: S-Elections held until 01/01/2025 for customers after Oct 8th"},{id:"payroll",name:"Payroll State Setup",pipeline:"INC / ELV (auto-triggered)",trigger:"Ticket moved to 'Pending Payroll Setup'",steps:["Task auto-created via workflow","Complete: 1) Withholding Registration 2) Unemployment Insurance","WA & AK: Email Gusto for exemptions instead","All other states: state-specific websites","When complete: move to 'Completed'","If payroll must run first: 'Waiting for $1500 payroll'"],output:"State payroll registered",notes:"Formations Address: 12220 113th Ave NE #100, Kirkland WA 98034"},{id:"oa",name:"OA & W-9 Sending",pipeline:"Post-incorporation",trigger:"IncFile order completion notification",steps:["Download incorporation docs from IncFile dashboard","Save under ShareFile > Lettuce Customer > Company","Fill Operating Agreement and W-9","Save OA + W-9 to ShareFile","EXISTING: Check Lettuce folder, cross-check with state site","Download AOI, inform Nawanjana for Form 2553"],output:"OA + W-9 saved in ShareFile",notes:"If >2 months, proceed with AOI date"},{id:"renewal",name:"Annual Renewal",pipeline:"Ticket-based",trigger:"Renewal ticket for Lettuce customer",steps:["Follow Formations Renewal process","SKIP customer notifications and billing","Complete state renewal filing","Record charges on Lettuce renewal sheet"],output:"Renewal filed, charges logged",notes:"Expanded 03/2025: CA only → all states, including LLC-only"},{id:"amendments",name:"Amendments",pipeline:"LET - Lettuce Ad-Hoc Request",trigger:"Amendment request via LET pipeline",steps:["Identify type: Name | Owner | Address | Industry","Check current details on state site","If online → amend on state website","If not → handle via paper filing","Inform customer of charges"],output:"Entity details updated"},{id:"swyft",name:"Swyft Filings Incorporation",pipeline:"PRO - New Business Incorporation",trigger:"Alternative path via Swyft Filings",steps:["Follow Swyft Filings platform process","Same post-submission: save docs, notify Melissa, update ticket"],output:"Incorporation filed via Swyft",notes:"Visual training guide (screenshots not migrated)"}]},{id:"accounting",label:"Accounting",owner:"Harsha",c:C.green,workflows:[{id:"monthly",name:"Monthly Accounts Review",pipeline:"Monthly Accounting Pipeline",trigger:"Monthly cycle per customer",steps:["STEP 1: Understand business (overview, revenue streams, major expenses). <$50 excluded","STEP 2a: P&L Income — Check recording method, identify unrelated deposits. DEFAULT: treat as Income unless clearly Shareholder Contribution or Expense Refund","STEP 2b: P&L Expenses — Business-only, same vendor = single account, verify BUH + BUA","STEP 2c: P&L Payroll — Wages vs paystubs, tax expenses, officer health insurance, retirement, officer vs employee classified separately","STEP 3a: Balance Sheet — Bank accounts updated, Undeposited Funds settled, Fixed Assets threshold","STEP 3b: Balance Sheet — Capital Stock recorded, Retained Earnings match 1120S, Shareholder Distributions clean","STEP 4: Other — Business name matches legal docs, vendor dedup, tax payments accurate"],output:"Clean monthly books"}]},{id:"cs",label:"CS Support",owner:"Dushini",c:C.purple,workflows:[{id:"tickets",name:"HubSpot Ticket Handling",pipeline:"All pipelines (triage)",trigger:"New tickets in HubSpot",steps:["Filter out: CSM Review, Platinum, Config, Pro Pipeline","Assign handleable tickets to team","Team drafts response","Dushini reviews and confirms","Send email to customer","Update status: Resolved / Escalated to FL / Waiting on Us","Track in Excel sheet"],output:"Ticket resolved or escalated"},{id:"escalation",name:"Escalation Routing (4-tier)",pipeline:"Cross-pipeline",trigger:"Ticket needs expertise beyond L1",steps:["TIER 1: Confident → draft, review, send, resolve","TIER 2: Some expertise → comment + Slack US CS, SL sends response","TIER 3: FL escalation → acknowledge customer (48hr), assign via Teams","TIER 4: US-only → route to CSMs for tax advisory, retirement, cancellations"],output:"Resolved at appropriate tier",notes:"Slack = SL→US | Teams = SL CS→SL FL depts"},{id:"followup",name:"Daily Follow-Up Routine",pipeline:"All open tickets",trigger:"Start of each shift",steps:["Review previous day's unresolved requests FIRST","Check: did you promise customer a response?","If yes → verify response was sent","If not sent → follow up with assigned team member","If still unresolved → courtesy email within 48 hours"],output:"All items tracked, customers informed"}]},{id:"cross",label:"Cross-Team",owner:"Multiple",c:"#9ca3af",workflows:[{id:"notice",name:"PRO Notice Pipeline",pipeline:"PRO - Notice Pipeline",trigger:"Customer uploads Notice or mail received",steps:["Current: Lettuce Support manually copies ticket | Formations creates from Stable mailbox","Soon (M1): Webhook auto-creates ticket on upload","Ticket created with ShareFile folder link","Enter 'New' → route through 12 stages","If info needed: 'Escalated to Pro'","Once resolved: 'Resolved' or 'Cancelled'"],output:"Notice resolved",notes:"M1 = webhook | M2 = auto screening | M3 = Stable mail | M4 = formations.lettuce.co"},{id:"churn",name:"Churning a Customer",pipeline:"Customer Churn",trigger:"Customer requests to cancel/leave",steps:["CS uses 'Customer Churn (initial discovery)' HubSpot template","Ask: Closing company or moving to another provider?","Ask: If moving, continue using Gusto?","Ask: If not, should Gusto file next quarter's taxes and make payments?","CS creates Task for Fulfillment with answers","FL: Cancel subscription in Stripe (search by email, may need to dig)","FL: Handle Gusto based on customer answers","FL: Update HubSpot records"],output:"Customer fully churned, all systems updated"}]}];
-const unmigrated = [{group:"CS Support SOPs (18 — not migrated)",items:["Help Desk Ticket Handling","FL Task Handling","Product Issues","Documents via Email","Accounting Issues","State Renewal/Statement of Info","Customer Request for P&L","Open Items List","System Issues","W2 Requests","Category Options Unavailable","California FTB Payments","Payroll Setup for New Employee","Notices","Update CC","Can't Access Tax Return in App","IRS Balance Due Instructions","Return Reprocessing"]},{group:"AI Chat Handoff Templates (7)",items:["Greeting","Config handoffs","Tax (Common)","1040 Tax","1120S Tax","Accounting","Controller Support"]},{group:"Playbooks & Process Guides (11 — access restricted)",items:["Config Process Guide","Config Playbook (WIP)","Accounting Process Guide","Accounting Playbook (WIP)","1120S Process Guide","1120S Playbook (WIP)","1040 Process Guide","1040 Playbook (WIP)","Tax Operations Guide","Doc/Info Processing Guide","Controller Support Guide"]},{group:"Other Processes (7 — access restricted)",items:["Churning a Customer","Sales Handoff / Onboarding Questions","Customer Experience SLA","Customer Expectation / Responsibilities","Closing S-Corp with Dissolution","YTD Accounting Catch-up","Investigative Bookkeeping"]}];
-const glossary = [{term:"FL",full:"Fulfillment",cat:"Organization",detail:"The Sri Lanka-based fulfillment operation (~45 staff). When people say 'FL team' or 'FL escalation,' they mean the gsk team in Sri Lanka."},{term:"gsk",full:"Sri Lanka fulfillment company",cat:"Organization",detail:"The entity that employs the SL fulfillment team. Has its own vision: 'Redefine U.S. tax and accounting fulfilment services.' Handles 90%+ of all work."},{term:"SL",full:"Sri Lanka",cat:"Organization",detail:"Shorthand for the Sri Lanka team/office. SL team works the US night shift."},{term:"KMT",full:"Know Mas Tax (Partner Brand)",cat:"Organization",detail:"A separate client/partner brand alongside Formations and Lettuce. Has its own customer base (20→50 1040 returns), Slack channels (kmt-external-notifications, KMT Operations), separate OIL templates, and dedicated management process. Salinda Chamal is the main contact."},{term:"CSM",full:"Customer Success Manager",cat:"Roles",detail:"US-based Level 3 escalation handlers. Tax advisory, retirement, complex estimates, cancellations, account strategy."},{term:"CSA",full:"Customer Success Associate",cat:"Roles",detail:"Level 2 bridge role. Escalates with comments, spots upsells, manages AI chat handoffs."},{term:"CS",full:"Customer Support / Success",cat:"Roles",detail:"'CS Support' = Dushini's SL team (L1/L2). 'US CS' = US-based CSMs."},{term:"OIL",full:"Open Items List",cat:"Tax & Accounting",detail:"Checklist of missing docs/info needed for tax returns. Generated per customer before tax season. 2025 pain point: planned Dec, started mid-Jan."},{term:"OA",full:"Operating Agreement",cat:"Legal / Config",detail:"LLC ownership and operating procedure document. Prepared after incorporation using IncFile docs. Saved to ShareFile alongside W-9."},{term:"AOI",full:"Articles of Organization",cat:"Legal / Config",detail:"Foundational state filing document for LLC creation. Downloaded from state site for existing customers."},{term:"EIN",full:"Employer Identification Number",cat:"Legal / Config",detail:"IRS tax ID for a business. IncFile tries to get it electronically. If it fails, config team verifies info and assigns to CS."},{term:"W-9",full:"IRS Form W-9",cat:"Legal / Config",detail:"Taxpayer ID confirmation form. Filled alongside OA post-incorporation."},{term:"SOS",full:"Secretary of State",cat:"Legal / Config",detail:"State office handling entity filings. Config team verifies entity name availability before incorporation."},{term:"BOIR",full:"Beneficial Ownership Information Report",cat:"Legal / Config",detail:"FinCEN filing for beneficial owners. 986 completed in 2024."},{term:"1040",full:"Individual Income Tax Return",cat:"Tax & Accounting",detail:"Personal tax return. Shiran/Salinda's team (7→9). Target: 50% by deadline, 90%+ in SL. 570→950 returns."},{term:"1120S",full:"S-Corp Income Tax Return",cat:"Tax & Accounting",detail:"Business tax return. Dhilan's team (3→5). 60% by deadline, all in Sri Lanka."},{term:"1065",full:"Partnership Return",cat:"Tax & Accounting",detail:"Partnership tax return. Has its own HubSpot pipeline."},{term:"2553",full:"S-Corp Election Form",cat:"Tax & Accounting",detail:"Filed to elect S-Corp status. New LLCs: fax Standard 2553. Existing: <75 days = Standard, >75 days = 2553+8832."},{term:"8832",full:"Entity Classification Election",cat:"Tax & Accounting",detail:"Used with Form 2553 for late S-Elections (>75 days from incorporation)."},{term:"1099",full:"Information Return",cat:"Tax & Accounting",detail:"Reports non-wage income. Has its own HubSpot pipeline."},{term:"P&L",full:"Profit & Loss Statement",cat:"Tax & Accounting",detail:"Income statement. Central to Monthly Review. Team verifies income, expenses, payroll."},{term:"BOB",full:"Books of Business",cat:"Tax & Accounting",detail:"Accounts per bookkeeper. Key metric. Target: H1 50→60, H2 60→75."},{term:"BUA",full:"Business Use of Auto",cat:"Tax & Accounting",detail:"Vehicle tax deduction. Actual Expenses or Standard Mileage. Known issue: no agreed process for actual expenses."},{term:"BUH",full:"Business Use of Home",cat:"Tax & Accounting",detail:"Home office deduction. 'BUH OIL bug' is a blocking product issue."},{term:"PTE",full:"Pass-Through Entity",cat:"Tax & Accounting",detail:"S-Corp, LLC, or partnership where income passes through to personal returns."},{term:"FTB",full:"Franchise Tax Board (CA)",cat:"Tax & Accounting",detail:"California's state tax agency. 'California FTB Payments' is one of the 18 SOPs."},{term:"FFM",full:"Formations Financial Management",cat:"Tools & Systems",detail:"Customer-facing platform. Onboarding data, doc uploads, profiles, OIL tracking."},{term:"HS",full:"HubSpot",cat:"Tools & Systems",detail:"Central CRM + ticket system. 16 pipelines, all customer data."},{term:"SF",full:"ShareFile",cat:"Tools & Systems",detail:"Doc storage. Being replaced by formations.lettuce.co."},{term:"INC",full:"Incorporation Pipeline",cat:"Pipelines",detail:"HubSpot pipeline for new formations. New → Incorporation Completed → Pending Payroll → Completed."},{term:"ELV",full:"Existing LLC Verification",cat:"Pipelines",detail:"Pipeline for existing LLCs wanting S-Corp election."},{term:"LET",full:"Lettuce Ad-Hoc Request",cat:"Pipelines",detail:"Pipeline for misc Lettuce requests including amendments."},{term:"TN",full:"Tax Notice Pipeline",cat:"Pipelines",detail:"IRS/state tax notice handling."},{term:"PN",full:"Payroll Notice Pipeline",cat:"Pipelines",detail:"Payroll notice handling. Harsha's team."},{term:"PAY",full:"Catch-up Payroll",cat:"Pipelines",detail:"EOY catch-up payroll pipeline."},{term:"BS",full:"Banking Status",cat:"Pipelines",detail:"Bank transaction categorization pipeline."},{term:"BIB",full:"Books in a Box",cat:"Products",detail:"Lowest product tier. Tiers: Platinum → Standard → Digital → BIB."},{term:"SLA",full:"Service Level Agreement",cat:"Operations",detail:"CS Support: 48hr courtesy email for escalated tickets. 2025 goal: SLAs for all engagements."},{term:"QA",full:"Quality Assurance",cat:"Operations",detail:"Dushini reviews all CS drafts. Accounting has multi-step monthly checklist."},{term:"BAU",full:"Business As Usual",cat:"Operations",detail:"Steady-state ops after rollout. Target model once SL support is ramped."},{term:"WBR",full:"Weekly Business Review",cat:"Reporting",detail:"Monday report. Part of weekly cadence with OIL List, Pipeline Review, L10 Report."},{term:"L10",full:"Level 10 Meeting (EOS)",cat:"Reporting",detail:"EOS framework weekly meeting. L10 Report produced Wednesdays."},{term:"CCH",full:"CCH (Tax Software)",cat:"Tools & Systems",detail:"Tax preparation software used by the Tax Operations team. First SOP in Tax Ops is CCH Profile/Return Creation."},{term:"POA",full:"Power of Attorney",cat:"Legal / Config",detail:"Tax form (Form 2848) authorizing someone to represent a taxpayer before the IRS. POA Processing is one of the 7 Tax Operations SOPs."},{term:"PRO",full:"Professional / Lettuce Partner Channel",cat:"Pipelines",detail:"Label for the Lettuce-branded customer base that Formations fulfills. PRO pipelines (PRO Notice, PRO New Business Incorporation, 1040 PRO) are specifically for Lettuce partner customers, distinct from Formations direct customers."},{term:"MRR",full:"Monthly Recurring Revenue",cat:"Operations",detail:"Subscription revenue metric. Controller Support (Chamara) maintains MRR records, manages plan changes, and does MRR updates/reconciliation."},{term:"AR",full:"Accounts Receivable",cat:"Operations",detail:"Money owed to the company. Controller Support has an AR Collections Process for outstanding customer payments."}];
-const teamData = {lettuceUS:{label:"Lettuce — US Team",color:C.cyan,people:[{name:"Ran Harpaz",role:"CEO & Founder",area:"Leadership",email:"ran@lettuce.co",notes:"Proposed the 3 automation initiatives. Created the FL Migration docs in Confluence."},{name:"Brad Matthews",role:"Head of Operations",area:"Operations",email:"brad.matthews@lettuce.co",notes:"Reports to Ran. Owns Books Review automation initiative. Oversees Davis, payroll ops, customer success."},{name:"Jeremiah Porten",role:"Engineering Lead",area:"Engineering",email:"jeremiah.porten@lettuce.co",notes:"Leads engineering team."},{name:"Davis Troutman",role:"Operations",area:"Operations",email:"davis.troutman@lettuce.co",notes:"Reports to Brad. Handles daily operations, fraud detection, banking issues, customer escalations."},{name:"Camille Rosales",role:"CS Operations Lead",area:"Customer Success",email:"camille.rosales@lettuce.co",notes:"Owns Incorporation + Notice Handling automation. Manages SLA definitions, support team rollout, email review."},{name:"Sarah Buford",role:"CSM",area:"Customer Success",email:"sarah.buford@lettuce.co",notes:"Level 3 US-based CSM. Reviews CS support responses. Handles complex client escalations."},{name:"Ana Gazawi",role:"CS / Support",area:"Customer Success",email:"ana.gazawi@lettuce.co",notes:"Handles customer support escalations, coordinates with Formations and Lettuce teams."},{name:"Meghan Duckett",role:"Customer Success",area:"Customer Success",email:"meghan.duckett@lettuce.co",notes:"Customer success, coordinates with Formations sales for customer transitions."},{name:"Mark Jackson",role:"Customer Success",area:"Customer Success",email:"mark.jackson@lettuce.co",notes:"Identified Healthcare VIP customers for priority escalations."},{name:"Brittney Ramirez",role:"Customer Success",area:"Customer Success",email:"brittney.ramirez@lettuce.co",notes:"CS team member."},{name:"Elena Henderson",role:"Payroll Operations",area:"Operations",email:"elena.henderson@lettuce.co",notes:"Handles payroll operations issues across customer accounts."},{name:"Dino Moraites",role:"Operations (Scalable Ops)",area:"Operations",email:"dino.moraites@lettuce.co",notes:"Works on scalable operations initiatives with Ran and Brad."},{name:"Paul Keum",role:"Sales / Customer Success",area:"Sales",email:"paul.keum@lettuce.co",notes:"Handles customer transitions and activated-to-income projects."},{name:"Yarin Feigenbaum",role:"Tax / Books Review",area:"Tax Advisory",email:"yarin.feigenbaum@lettuce.co",notes:"Tax advisory, works on books review processes with Formations team."},{name:"Cassidy Rasmussen",role:"Product / Project",area:"Product",email:"cassidy.rasmussen@lettuce.co",notes:"Manages formations.lettuce.co UI project, coordinates with Formations professional services."},{name:"Jesse Myers",role:"Engineering",area:"Engineering",email:"jesse.myers@lettuce.co",notes:"Engineering team."},{name:"Eyal Shahar",role:"UX Design",area:"Product",email:"eyal.shahar@lettuce.co",notes:"UX design."},{name:"Alex Bloom",role:"Design",area:"Product",email:"alex.bloom@lettuce.co",notes:"Design team."},{name:"Danny McCullough",role:"Head of Performance Marketing",area:"Marketing",email:"danny.mccullough@lettuce.co",notes:"Leads performance marketing. Identifies verticals for tailored messaging."},{name:"Matt Bendett",role:"Marketing",area:"Marketing",email:"matt.bendett@lettuce.co",notes:"Leading vertical-specific marketing targeting."},{name:"Megan Redford",role:"Partnerships",area:"Partnerships",email:"megan.redford@lettuce.co",notes:"Partnership webinars, scheduling."},{name:"Sonya Jamula",role:"Partnerships",area:"Partnerships",email:"sonya.jamula@lettuce.co",notes:"Partnerships team."},{name:"Anne Schwab",role:"Partnerships",area:"Partnerships",email:"anne.schwab@lettuce.co",notes:"Partnerships team."}]},formationsUS:{label:"Formations — Professional Services (US)",color:C.orange,people:[{name:"Isaac Andresky",role:"Sales",area:"Sales",email:"isaac@formationscorp.com",notes:"Formations sales team. Handles customer transitions from Lettuce to Formations."},{name:"Marcus",role:"Tax Professional Services",area:"Tax",email:"marcus@formationscorp.com",notes:"1040 review access on formations.lettuce.co. Referenced in Notion docs for HubSpot ticket flow. No longer in Slack."},{name:"Matthew",role:"Tax Professional Services",area:"Tax",email:"m.matthew@formationscorp.com",notes:"1040 review access on formations.lettuce.co."},{name:"Jonathan",role:"Tax Professional Services",area:"Tax",email:"m.jonathan@formationscorp.com",notes:"1040 review access on formations.lettuce.co."},{name:"Charan",role:"Tax Professional Services",area:"Tax",email:"v.charan@formationscorp.com",notes:"1040 review access on formations.lettuce.co."}]},sriLanka:{label:"Sri Lanka — gsk Fulfillment Team (~45 staff)",color:C.purple,people:[{name:"Nawanjana",role:"Configuration Dept Head",area:"Configuration",email:"",notes:"Owns Config team (~5 staff). Handles incorporations, S-elections, payroll setup, amendments, renewals. ~1,400 incorporations/yr target."},{name:"Harsha",role:"Accounting Dept Head",area:"Accounting",email:"",notes:"Owns Accounting team (29→33 staff). Monthly bookkeeping, P&L review, balance sheet. BOB ratio target: 75. Also monitors payroll-notice-handling Slack."},{name:"Dhilan",role:"Business Tax (1120S) Dept Head",area:"Business Tax",email:"",notes:"Owns 1120S team (3→5 preparers). 60% by deadline, 95% by extension. All produced in Sri Lanka."},{name:"Shiran Nilanga",role:"Individual Tax (1040) Dept Head",area:"Individual Tax",email:"",notes:"Co-owns 1040 team with Salinda (7→9 preparers). 50% by deadline. Also handles cross-department escalations."},{name:"Salinda Chamal",role:"Individual Tax (1040) + KMT",area:"Individual Tax",email:"",notes:"Co-owns 1040 team with Shiran. Main contact for KMT partner brand (20→50 returns)."},{name:"Dushini Nicholas",role:"CS Support Team Lead",area:"CS Support",email:"n.dushini@formationscorp.com",notes:"Leads 4-person CS Support team. Reviews all drafted responses before sending. Handles L1/L2 triage."},{name:"Ashini Lokuge",role:"CS Support",area:"CS Support",email:"l.ashini@formationscorp.com",notes:"Active CS Support team member."},{name:"Kalani Kodippily",role:"CS Support",area:"CS Support",email:"k.kalani@formationscorp.com",notes:"Active CS Support team member."},{name:"Wajiva Hasitha",role:"Tax Ops + Doc Processing",area:"Supporting Services",email:"",notes:"Leads both Tax Operations and Document Processing teams."},{name:"Sanjulee",role:"Platinum Accounting",area:"Accounting",email:"",notes:"Handles Platinum-tier customer accounting. Monitors platinum Slack channel."},{name:"Gayan",role:"General / Admin",area:"Admin",email:"",notes:"Monitors general Slack channel. gsk Admin functions."},{name:"Keshani Madurapperuma",role:"Config Specialist",area:"Configuration",email:"",notes:"Handles Swyft Filings incorporations. Config team member under Nawanjana."},{name:"Pavindi Mahawattage",role:"Tax Notice Handling",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack channel. Handles individual tax notices."},{name:"Dharshana Udawatte",role:"Tax Notice / Individual Tax",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack. Handles individual tax and config notices. Also does 1040 tax preparation."},{name:"Roshan Sanjeewa",role:"Business Tax",area:"Business Tax",email:"",notes:"Business tax team member under Dhilan."},{name:"Chamara Liyanage",role:"Revenue Recognition",area:"Business Tax",email:"",notes:"Monitors revenue-recognition-team Slack channel."},{name:"Anjale",role:"Config / Platinum",area:"Configuration",email:"",notes:"Handles Lettuce config and Platinum work fulfillment."},{name:"Kavindu",role:"Tax (1040/1120S)",area:"Tax",email:"",notes:"Handles both individual and business tax work. Cost segregation."},{name:"Udeshani Shanika",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Handles cost-segregation-notifications. Lettuce individual tax. Also does 1040 tax preparation."},{name:"Kavindu Peiris",role:"Individual Tax / Business Tax",area:"Individual Tax",email:"",notes:"1040 tax preparer. Also handles 1040 rejection processing and business tax support."},{name:"Piumi Imalsha",role:"Payroll Notice Handling",area:"Configuration",email:"",notes:"Handles payroll-notice-handling along with Dulani."},{name:"Dulani",role:"Payroll Notice Handling",area:"Configuration",email:"m.dulani@formationscorp.com",notes:"Handles payroll-notice-handling along with Piumi."},{name:"Vidushika Wijesinghe",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Individual tax team under Shiran."},{name:"Senuri",role:"Config / Tax Notice",area:"Configuration",email:"",notes:"Handles config and tax notice work."},{name:"Malan",role:"Config / Payroll Notice",area:"Configuration",email:"",notes:"Handles payroll notice config work."}]},departed:{label:"No Longer Active (referenced in docs but not in Slack)",color:"#6b7280",people:[{name:"Melissa Stotland",role:"CSM (Formations)",area:"Customer Success",email:"s***@formationscorp.com",notes:"Was Manager, Customer Success at Formations Corporation. Referenced in Level 1/2/3 Support docs for auditing responses. No longer in Slack workspace."},{name:"Alex Leary",role:"CSM (Formations)",area:"Customer Success",email:"",notes:"Was a CSM. Inbox reviewed by SL team. Referenced in support docs. No longer in Slack."},{name:"Kapila",role:"FL Director / Manager",area:"SL Leadership",email:"",notes:"Was FL team manager in Sri Lanka. Owned hiring, English proficiency testing, scheduling. Key owner in Level 1/2/3 rollout. No longer in Slack."},{name:"Nethni Peiris",role:"CS Support (SL)",area:"CS Support",email:"p.nethni@formationscorp.com",notes:"Was on Dushini's CS Support team. Confirmed no longer active in the Notion docs."},{name:"Keyahnna O'Neil",role:"Business Contact",area:"Operations",email:"",notes:"Was business contact for payroll registrations (425-292-2008). No longer in Slack."},{name:"Samantha",role:"IRS Mail Handler",area:"Operations",email:"",notes:"Was responsible for mailing S-Election forms to IRS. No longer in Slack."},{name:"Marcus Edgette",role:"Tax / HubSpot Ops (Formations)",area:"Tax",email:"marcus@formationscorp.com",notes:"Was on Formations professional services team. Referenced for 1120S tax and HubSpot ticket flow. No longer in Slack."}]}};
-const acrMap = {};glossary.forEach(g => { acrMap[g.term] = {full:g.full, detail:g.detail}; });
-function OnboardingTab(){const [active,setActive]=useState("strategy");const cur=onboardingSections.find(s=>s.id===active);return(<div style={{display:"flex",gap:0,minHeight:"60vh"}}><div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",paddingRight:0,position:"sticky",top:20,alignSelf:"flex-start"}}>{onboardingSections.map(s=>(<div key={s.id} onClick={()=>setActive(s.id)} className={"nav-item"+(active===s.id?" active":"")} style={{padding:"8px 16px",fontSize:13,fontWeight:s.highlight?600:undefined,color:s.highlight&&active!==s.id?"#06b6d4":undefined}}>{s.label}</div>))}</div><div style={{flex:1,padding:"4px 24px 40px",minHeight:300}}>{cur&&cur.content()}</div></div>);}
-function WorkflowTab(){const [activeCat,setActiveCat]=useState("config");const [expanded,setExpanded]=useState(null);const [showUn,setShowUn]=useState(false);const cat=wfCats.find(c=>c.id===activeCat);const totalDoc=wfCats.reduce((s,c)=>s+c.workflows.length,0);const totalUn=unmigrated.reduce((s,g)=>s+g.items.length,0);return(<div style={{display:"flex",gap:0,minHeight:"60vh"}}><div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:20,alignSelf:"flex-start"}}><div style={{padding:"8px 16px",marginBottom:8}}><div style={{display:"flex",gap:8}}><div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.green,letterSpacing:"0.05em"}}>DOCUMENTED</div><div style={{fontSize:20,fontWeight:500}}>{totalDoc}</div></div><div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.amber,letterSpacing:"0.05em"}}>PENDING</div><div style={{fontSize:20,fontWeight:500}}>{totalUn}</div></div></div></div>{wfCats.map(c=>(<div key={c.id} onClick={()=>{setActiveCat(c.id);setExpanded(null);setShowUn(false);}} className={"nav-item"+(activeCat===c.id&&!showUn?" active":"")} style={{padding:"8px 16px",fontSize:13,display:"flex",justifyContent:"space-between"}}><span>{c.label}</span><span className="mono" style={{fontSize:10,opacity:0.5}}>{c.workflows.length}</span></div>))}<div onClick={()=>setShowUn(!showUn)} className={"nav-item"+(showUn?" active":"")} style={{padding:"8px 16px",fontSize:13,color:C.amber}}>Not yet migrated ({totalUn})</div></div><div style={{flex:1,padding:"0 24px"}}>{!showUn&&cat&&(<div><div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:14}}><span style={{fontWeight:500,fontSize:15}}>{cat.label}</span><span className="mono step-badge" style={{color:cat.c,border:"1px solid "+cat.c+"33",background:cat.c+"1a"}}>Owner: {cat.owner}</span></div>{cat.workflows.map(w=>{const isExp=expanded===w.id;return(<div key={w.id} className="card" style={{marginBottom:10,overflow:"hidden",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}><div onClick={()=>setExpanded(isExp?null:w.id)} className="expand-btn" style={{padding:14,display:"flex",justifyContent:"space-between",alignItems:"start"}}><div><div style={{fontWeight:500,fontSize:14}}>{w.name}</div><div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{w.trigger}</div></div><span style={{fontSize:11,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span></div>{isExp&&(<div style={{padding:"0 14px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}><div className="mono" style={{fontSize:10,color:"#6b7280",margin:"10px 0 8px",letterSpacing:"0.03em"}}>Pipeline: {w.pipeline}</div>{w.steps.map((s,i)=>(<div key={i} style={{display:"flex",gap:8,marginBottom:6}}><span className="mono" style={{fontSize:10,color:"#6b7280",minWidth:16,textAlign:"right"}}>{i+1}</span><span style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{s}</span></div>))}<div style={{marginTop:10,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.04)"}}><div style={{fontSize:12,color:"#9ca3af"}}><strong style={{color:"#f0f0ff"}}>Output:</strong> {w.output}</div>{w.notes&&<div className="warn-card" style={{borderRadius:6,padding:"8px 12px",marginTop:8,fontSize:11,lineHeight:"1.5"}}><strong style={{color:"#eab308"}}>Note:</strong> <span style={{color:"#9ca3af"}}>{w.notes}</span></div>}</div></div>)}</div>);})}</div>)}{showUn&&(<div><div className="warn-card" style={{borderRadius:8,padding:"12px 16px",marginBottom:14,fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}><strong style={{color:"#eab308"}}>These workflows are referenced but not yet readable:</strong> not migrated to Confluence, behind Notion permission restrictions, or sub-pages not included in migration batch.</div>{unmigrated.map((g,i)=>(<div key={i} style={{marginBottom:16}}><div className="mono" style={{fontSize:10,color:"#6b7280",marginBottom:6,letterSpacing:"0.05em",textTransform:"uppercase"}}>{g.group}</div>{g.items.map((item,j)=>(<div key={j} style={{fontSize:12,color:"#9ca3af",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",display:"flex",alignItems:"center",gap:8}}><span style={{color:"#eab308",fontSize:8}}>&#9675;</span>{item}</div>))}</div>))}</div>)}</div></div>);}
-function GlossaryTab(){const [search,setSearch]=useState("");const [activeCat,setActiveCat]=useState("All");const [expanded,setExpanded]=useState(null);const cats=[...new Set(glossary.map(a=>a.cat))].sort();const filtered=glossary.filter(a=>{const ms=search===""||a.term.toLowerCase().includes(search.toLowerCase())||a.full.toLowerCase().includes(search.toLowerCase())||a.detail.toLowerCase().includes(search.toLowerCase());const mc=activeCat==="All"||a.cat===activeCat;return ms&&mc;});return(<div style={{display:"flex",gap:0,minHeight:"calc(100vh - 120px)"}}><div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)"}}><div style={{padding:"8px 16px",marginBottom:4}}><input type="text" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",padding:"6px 10px",borderRadius:6,fontSize:12}}/></div><div onClick={()=>setActiveCat("All")} className={"nav-item"+(activeCat==="All"?" active":"")} style={{padding:"8px 16px",fontSize:13}}>All ({glossary.length})</div>{cats.map(c=>{const ct=glossary.filter(a=>a.cat===c).length;return(<div key={c} onClick={()=>setActiveCat(c)} className={"nav-item"+(activeCat===c?" active":"")} style={{padding:"8px 16px",fontSize:13,display:"flex",justifyContent:"space-between"}}><span>{c}</span><span className="mono" style={{fontSize:10,opacity:0.5}}>{ct}</span></div>);})}</div><div style={{flex:1,padding:"0 24px"}}><div className="mono" style={{fontSize:10,color:"#6b7280",marginBottom:10,letterSpacing:"0.05em"}}>{filtered.length} TERM{filtered.length!==1?"S":""}</div>{filtered.map(a=>{const isExp=expanded===a.term;return(<div key={a.term} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}><div onClick={()=>setExpanded(isExp?null:a.term)} className="expand-btn" style={{padding:"10px 0",display:"flex",alignItems:"baseline",gap:12}}><span className="mono" style={{fontWeight:500,fontSize:13,color:C.cyan,minWidth:50}}>{a.term}</span><span style={{fontSize:13,flex:1}}>{a.full}</span><span style={{fontSize:10,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span></div>{isExp&&<div style={{paddingBottom:10,marginLeft:62}}><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.7"}}>{a.detail}</div><div style={{marginTop:6}}><span className="mono step-badge" style={{fontSize:9,color:"#6b7280",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)"}}>{a.cat}</span></div></div>}</div>);})}{filtered.length===0&&<div style={{textAlign:"center",color:"#6b7280",fontSize:13,padding:32}}>No matching terms</div>}</div></div>);}
-function TeamTab(){const [activeGroup,setActiveGroup]=useState("lettuceUS");const [expanded,setExpanded]=useState(null);const groups=[{id:"lettuceUS",...teamData.lettuceUS},{id:"formationsUS",...teamData.formationsUS},{id:"sriLanka",...teamData.sriLanka},{id:"departed",...teamData.departed}];const group=groups.find(g=>g.id===activeGroup);const byArea={};if(group)group.people.forEach(p=>{if(!byArea[p.area])byArea[p.area]=[];byArea[p.area].push(p);});return(<div style={{display:"flex",gap:0,minHeight:"60vh"}}><div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",paddingRight:0,position:"sticky",top:20,alignSelf:"flex-start"}}>{groups.map(g=>(<div key={g.id} onClick={()=>{setActiveGroup(g.id);setExpanded(null);}} className={"nav-item"+(activeGroup===g.id?" active":"")} style={{padding:"8px 16px",fontSize:12,lineHeight:"1.4"}}><span style={{color:activeGroup===g.id?g.color:undefined}}>{g.label}</span><div className="mono" style={{fontSize:10,color:"#4b5563",marginTop:2}}>{g.people.length} people</div></div>))}</div><div style={{flex:1,padding:"4px 24px 40px"}}>{group&&(<div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:16}}><span style={{fontWeight:500,fontSize:16,color:group.color}}>{group.label}</span><span className="mono" style={{fontSize:11,color:"#6b7280"}}>{group.people.length} people</span></div>{Object.entries(byArea).map(([area,people])=>(<div key={area} style={{marginBottom:16}}><div className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:8,paddingBottom:4,borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{area}</div>{people.map((p,i)=>{const isExp=expanded===p.name;return(<div key={i} style={{marginBottom:2}}><div onClick={()=>setExpanded(isExp?null:p.name)} className="expand-btn" style={{padding:"8px 12px",borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><div><span style={{fontWeight:500,fontSize:14}}>{p.name}</span><span style={{fontSize:12,color:"#6b7280",marginLeft:10}}>{p.role}</span></div><span style={{fontSize:10,color:"#4b5563"}}>{isExp?"\u25B2":"\u25BC"}</span></div>{isExp&&(<div style={{padding:"4px 12px 12px 12px"}}>{p.email&&<div className="mono" style={{fontSize:11,color:C.cyan,marginBottom:4}}>{p.email}</div>}<div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{p.notes}</div></div>)}</div>);})}</div>))}</div>)}</div></div>);}
-function App(){const [tab,setTab]=useState("onboarding");const tabs=[{id:"onboarding",label:"ONBOARDING GUIDE"},{id:"workflows",label:"WORKFLOW APPENDIX"},{id:"glossary",label:"ACRONYM GLOSSARY"},{id:"team",label:"TEAM DIRECTORY"}];return(<div style={{maxWidth:1100,margin:"0 auto",padding:"24px 24px 60px"}}><div style={{marginBottom:20}}><h1 style={{fontSize:20,fontWeight:500,marginBottom:2}}>Sri Lanka - FL at a Glance</h1><p className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.08em"}}>LETTUCE / FORMATIONS FULFILLMENT OPERATIONS</p></div><div style={{display:"flex",gap:6,marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)",paddingBottom:12}}>{tabs.map(t=>(<button key={t.id} onClick={()=>setTab(t.id)} className="mono" style={{padding:"6px 14px",borderRadius:4,fontSize:10,letterSpacing:"0.05em",cursor:"pointer",border:"1px solid",transition:"all 0.15s",background:tab===t.id?"rgba(6,182,212,0.1)":"transparent",borderColor:tab===t.id?"rgba(6,182,212,0.4)":"transparent",color:tab===t.id?"#06b6d4":"#6b7280"}}>{t.label}</button>))}</div>{tab==="onboarding"&&<OnboardingTab/>}{tab==="workflows"&&<WorkflowTab/>}{tab==="glossary"&&<GlossaryTab/>}{tab==="team"&&<TeamTab/>}<div className="mono" style={{marginTop:24,fontSize:9,color:"rgba(255,255,255,0.15)",borderTop:"1px solid rgba(255,255,255,0.04)",paddingTop:12,letterSpacing:"0.05em"}}>SOURCES: NOTION (FULFILLMENT - FL, LEVEL 1/2/3 SUPPORT) + CONFLUENCE (FL MIGRATION, 22 PAGES) · MARCH 2026</div></div>);}
+
+// ==================== WORKFLOW DATA ====================
+const wfCats = [
+  {id:"config",label:"Configuration",owner:"Nawanjana",c:C.blue,workflows:[
+    {id:"inc",name:"Incorporation (IncFile/MyCorp)",pipeline:"PRO - New Business Incorporation",trigger:"Customer submits company formation info",steps:["Determine routing: LLCs → IncFile | Professional → MyCorp | Unknown → Lettuce Team | TN state → hold","Pre-checks: Verify entity name at SOS + address on IncFile dashboard","Submit incorporation using Lettuce Summary details","If EIN fails: verify info accuracy (must match SSN card exactly), assign to CS team","Save IncFile docs in ShareFile folder","Notify Melissa with ShareFile link","Move ticket to 'Waiting on Incorporation'"],output:"Ticket in 'Waiting on Incorporation'"},
+    {id:"2553",name:"2553 S-Election Filing",pipeline:"INC / ELV Pipeline",trigger:"Customer needs S-Corp election",steps:["NEW LLCs: Verify in INC pipeline at 'Incorporation Completed'","Cross-check: Lettuce Summary + Signature Packet + Inc docs","Prepare Standard Form 2553, fax to IRS","EXISTING LLCs: Verify in ELV pipeline at 'New'","If <75 days → Standard 2553 | If >75 days → 2553+8832 (Late)","US staff mails S-Election to IRS","Move ticket to 'Pending Payroll State Set Up'"],output:"S-Election filed",notes:"2024 Hold Rule: S-Elections held until 01/01/2025 for customers after Oct 8th"},
+    {id:"payroll",name:"Payroll State Setup",pipeline:"INC / ELV (auto-triggered)",trigger:"Ticket moved to 'Pending Payroll Setup'",steps:["Task auto-created via workflow","Complete: 1) Withholding Registration 2) Unemployment Insurance","WA & AK: Email Gusto for exemptions instead","All other states: state-specific websites","When complete: move to 'Completed'","If payroll must run first: 'Waiting for $1500 payroll'"],output:"State payroll registered",notes:"Formations Address: 12220 113th Ave NE #100, Kirkland WA 98034"},
+    {id:"oa",name:"OA & W-9 Sending",pipeline:"Post-incorporation",trigger:"IncFile order completion notification",steps:["Download incorporation docs from IncFile dashboard","Save under ShareFile > Lettuce Customer > Company","Fill Operating Agreement and W-9","Save OA + W-9 to ShareFile","EXISTING: Check Lettuce folder, cross-check with state site","Download AOI, inform Nawanjana for Form 2553"],output:"OA + W-9 saved in ShareFile",notes:"If >2 months, proceed with AOI date"},
+    {id:"renewal",name:"Annual Renewal",pipeline:"Ticket-based",trigger:"Renewal ticket for Lettuce customer",steps:["Follow Formations Renewal process","SKIP customer notifications and billing","Complete state renewal filing","Record charges on Lettuce renewal sheet"],output:"Renewal filed, charges logged",notes:"Expanded 03/2025: CA only → all states, including LLC-only"},
+    {id:"amendments",name:"Amendments",pipeline:"LET - Lettuce Ad-Hoc Request",trigger:"Amendment request via LET pipeline",steps:["Identify type: Name | Owner | Address | Industry","Check current details on state site","If online → amend on state website","If not → handle via paper filing","Inform customer of charges"],output:"Entity details updated"},
+    {id:"swyft",name:"Swyft Filings Incorporation",pipeline:"PRO - New Business Incorporation",trigger:"Alternative path via Swyft Filings",steps:["Follow Swyft Filings platform process","Same post-submission: save docs, notify Melissa, update ticket"],output:"Incorporation filed via Swyft",notes:"Visual training guide (screenshots not migrated)"},
+  ]},
+  {id:"accounting",label:"Accounting",owner:"Harsha",c:C.green,workflows:[
+    {id:"monthly",name:"Monthly Accounts Review",pipeline:"Monthly Accounting Pipeline",trigger:"Monthly cycle per customer",steps:["STEP 1: Understand business (overview, revenue streams, major expenses). <$50 excluded","STEP 2a: P&L Income — Check recording method, identify unrelated deposits. DEFAULT: treat as Income unless clearly Shareholder Contribution or Expense Refund","STEP 2b: P&L Expenses — Business-only, same vendor = single account, verify BUH + BUA","STEP 2c: P&L Payroll — Wages vs paystubs, tax expenses, officer health insurance, retirement, officer vs employee classified separately","STEP 3a: Balance Sheet — Bank accounts updated, Undeposited Funds settled, Fixed Assets threshold","STEP 3b: Balance Sheet — Capital Stock recorded, Retained Earnings match 1120S, Shareholder Distributions clean","STEP 4: Other — Business name matches legal docs, vendor dedup, tax payments accurate"],output:"Clean monthly books"},
+  ]},
+  {id:"cs",label:"CS Support",owner:"Dushini",c:C.purple,workflows:[
+    {id:"tickets",name:"HubSpot Ticket Handling",pipeline:"All pipelines (triage)",trigger:"New tickets in HubSpot",steps:["Filter out: CSM Review, Platinum, Config, Pro Pipeline","Assign handleable tickets to team","Team drafts response","Dushini reviews and confirms","Send email to customer","Update status: Resolved / Escalated to FL / Waiting on Us","Track in Excel sheet"],output:"Ticket resolved or escalated"},
+    {id:"escalation",name:"Escalation Routing (4-tier)",pipeline:"Cross-pipeline",trigger:"Ticket needs expertise beyond L1",steps:["TIER 1: Confident → draft, review, send, resolve","TIER 2: Some expertise → comment + Slack US CS, SL sends response","TIER 3: FL escalation → acknowledge customer (48hr), assign via Teams","TIER 4: US-only → route to CSMs for tax advisory, retirement, cancellations"],output:"Resolved at appropriate tier",notes:"Slack = SL→US | Teams = SL CS→SL FL depts"},
+    {id:"followup",name:"Daily Follow-Up Routine",pipeline:"All open tickets",trigger:"Start of each shift",steps:["Review previous day's unresolved requests FIRST","Check: did you promise customer a response?","If yes → verify response was sent","If not sent → follow up with assigned team member","If still unresolved → courtesy email within 48 hours"],output:"All items tracked, customers informed"},
+  ]},
+  {id:"cross",label:"Cross-Team",owner:"Multiple",c:"#9ca3af",workflows:[
+    {id:"notice",name:"PRO Notice Pipeline",pipeline:"PRO - Notice Pipeline",trigger:"Customer uploads Notice or mail received",steps:["Current: Lettuce Support manually copies ticket | Formations creates from Stable mailbox","Soon (M1): Webhook auto-creates ticket on upload","Ticket created with ShareFile folder link","Enter 'New' → route through 12 stages","If info needed: 'Escalated to Pro'","Once resolved: 'Resolved' or 'Cancelled'"],output:"Notice resolved",notes:"M1 = webhook | M2 = auto screening | M3 = Stable mail | M4 = formations.lettuce.co"},
+    {id:"churn",name:"Churning a Customer",pipeline:"Customer Churn",trigger:"Customer requests to cancel/leave",steps:["CS uses 'Customer Churn (initial discovery)' HubSpot template","Ask: Closing company or moving to another provider?","Ask: If moving, continue using Gusto?","Ask: If not, should Gusto file next quarter's taxes and make payments?","CS creates Task for Fulfillment with answers","FL: Cancel subscription in Stripe (search by email, may need to dig)","FL: Handle Gusto based on customer answers","FL: Update HubSpot records"],output:"Customer fully churned, all systems updated"},
+  ]},
+];
+
+const unmigrated = [
+  {group:"CS Support SOPs (18 — not migrated)",items:["Help Desk Ticket Handling","FL Task Handling","Product Issues","Documents via Email","Accounting Issues","State Renewal/Statement of Info","Customer Request for P&L","Open Items List","System Issues","W2 Requests","Category Options Unavailable","California FTB Payments","Payroll Setup for New Employee","Notices","Update CC","Can't Access Tax Return in App","IRS Balance Due Instructions","Return Reprocessing"]},
+  {group:"AI Chat Handoff Templates (7)",items:["Greeting","Config handoffs","Tax (Common)","1040 Tax","1120S Tax","Accounting","Controller Support"]},
+  {group:"Playbooks & Process Guides (11 — access restricted)",items:["Config Process Guide","Config Playbook (WIP)","Accounting Process Guide","Accounting Playbook (WIP)","1120S Process Guide","1120S Playbook (WIP)","1040 Process Guide","1040 Playbook (WIP)","Tax Operations Guide","Doc/Info Processing Guide","Controller Support Guide"]},
+  {group:"Other Processes (7 — access restricted)",items:["Churning a Customer","Sales Handoff / Onboarding Questions","Customer Experience SLA","Customer Expectation / Responsibilities","Closing S-Corp with Dissolution","YTD Accounting Catch-up","Investigative Bookkeeping"]},
+];
+
+// ==================== GLOSSARY DATA ====================
+const glossary = [
+  {term:"FL",full:"Fulfillment",cat:"Organization",detail:"The Sri Lanka-based fulfillment operation (~45 staff). When people say 'FL team' or 'FL escalation,' they mean the gsk team in Sri Lanka."},
+  {term:"gsk",full:"Sri Lanka fulfillment company",cat:"Organization",detail:"The entity that employs the SL fulfillment team. Has its own vision: 'Redefine U.S. tax and accounting fulfilment services.' Handles 90%+ of all work."},
+  {term:"SL",full:"Sri Lanka",cat:"Organization",detail:"Shorthand for the Sri Lanka team/office. SL team works the US night shift."},
+  {term:"KMT",full:"Know Mas Tax (Partner Brand)",cat:"Organization",detail:"A separate client/partner brand alongside Formations and Lettuce. Has its own customer base (20→50 1040 returns), Slack channels (kmt-external-notifications, KMT Operations), separate OIL templates, and dedicated management process. Salinda Chamal is the main contact."},
+  {term:"CSM",full:"Customer Success Manager",cat:"Roles",detail:"US-based Level 3 escalation handlers. Tax advisory, retirement, complex estimates, cancellations, account strategy."},
+  {term:"CSA",full:"Customer Success Associate",cat:"Roles",detail:"Level 2 bridge role. Escalates with comments, spots upsells, manages AI chat handoffs."},
+  {term:"CS",full:"Customer Support / Success",cat:"Roles",detail:"'CS Support' = Dushini's SL team (L1/L2). 'US CS' = US-based CSMs."},
+  {term:"OIL",full:"Open Items List",cat:"Tax & Accounting",detail:"Checklist of missing docs/info needed for tax returns. Generated per customer before tax season. 2025 pain point: planned Dec, started mid-Jan."},
+  {term:"OA",full:"Operating Agreement",cat:"Legal / Config",detail:"LLC ownership and operating procedure document. Prepared after incorporation using IncFile docs. Saved to ShareFile alongside W-9."},
+  {term:"AOI",full:"Articles of Organization",cat:"Legal / Config",detail:"Foundational state filing document for LLC creation. Downloaded from state site for existing customers."},
+  {term:"EIN",full:"Employer Identification Number",cat:"Legal / Config",detail:"IRS tax ID for a business. IncFile tries to get it electronically. If it fails, config team verifies info and assigns to CS."},
+  {term:"W-9",full:"IRS Form W-9",cat:"Legal / Config",detail:"Taxpayer ID confirmation form. Filled alongside OA post-incorporation."},
+  {term:"SOS",full:"Secretary of State",cat:"Legal / Config",detail:"State office handling entity filings. Config team verifies entity name availability before incorporation."},
+  {term:"BOIR",full:"Beneficial Ownership Information Report",cat:"Legal / Config",detail:"FinCEN filing for beneficial owners. 986 completed in 2024."},
+  {term:"1040",full:"Individual Income Tax Return",cat:"Tax & Accounting",detail:"Personal tax return. Shiran/Salinda's team (7→9). Target: 50% by deadline, 90%+ in SL. 570→950 returns."},
+  {term:"1120S",full:"S-Corp Income Tax Return",cat:"Tax & Accounting",detail:"Business tax return. Dhilan's team (3→5). 60% by deadline, all in Sri Lanka."},
+  {term:"1065",full:"Partnership Return",cat:"Tax & Accounting",detail:"Partnership tax return. Has its own HubSpot pipeline."},
+  {term:"2553",full:"S-Corp Election Form",cat:"Tax & Accounting",detail:"Filed to elect S-Corp status. New LLCs: fax Standard 2553. Existing: <75 days = Standard, >75 days = 2553+8832."},
+  {term:"8832",full:"Entity Classification Election",cat:"Tax & Accounting",detail:"Used with Form 2553 for late S-Elections (>75 days from incorporation)."},
+  {term:"1099",full:"Information Return",cat:"Tax & Accounting",detail:"Reports non-wage income. Has its own HubSpot pipeline."},
+  {term:"P&L",full:"Profit & Loss Statement",cat:"Tax & Accounting",detail:"Income statement. Central to Monthly Review. Team verifies income, expenses, payroll."},
+  {term:"BOB",full:"Books of Business",cat:"Tax & Accounting",detail:"Accounts per bookkeeper. Key metric. Target: H1 50→60, H2 60→75."},
+  {term:"BUA",full:"Business Use of Auto",cat:"Tax & Accounting",detail:"Vehicle tax deduction. Actual Expenses or Standard Mileage. Known issue: no agreed process for actual expenses."},
+  {term:"BUH",full:"Business Use of Home",cat:"Tax & Accounting",detail:"Home office deduction. 'BUH OIL bug' is a blocking product issue."},
+  {term:"PTE",full:"Pass-Through Entity",cat:"Tax & Accounting",detail:"S-Corp, LLC, or partnership where income passes through to personal returns."},
+  {term:"FTB",full:"Franchise Tax Board (CA)",cat:"Tax & Accounting",detail:"California's state tax agency. 'California FTB Payments' is one of the 18 SOPs."},
+  {term:"FFM",full:"Formations Financial Management",cat:"Tools & Systems",detail:"Customer-facing platform. Onboarding data, doc uploads, profiles, OIL tracking."},
+  {term:"HS",full:"HubSpot",cat:"Tools & Systems",detail:"Central CRM + ticket system. 16 pipelines, all customer data."},
+  {term:"SF",full:"ShareFile",cat:"Tools & Systems",detail:"Doc storage. Being replaced by formations.lettuce.co."},
+  {term:"INC",full:"Incorporation Pipeline",cat:"Pipelines",detail:"HubSpot pipeline for new formations. New → Incorporation Completed → Pending Payroll → Completed."},
+  {term:"ELV",full:"Existing LLC Verification",cat:"Pipelines",detail:"Pipeline for existing LLCs wanting S-Corp election."},
+  {term:"LET",full:"Lettuce Ad-Hoc Request",cat:"Pipelines",detail:"Pipeline for misc Lettuce requests including amendments."},
+  {term:"TN",full:"Tax Notice Pipeline",cat:"Pipelines",detail:"IRS/state tax notice handling."},
+  {term:"PN",full:"Payroll Notice Pipeline",cat:"Pipelines",detail:"Payroll notice handling. Harsha's team."},
+  {term:"PAY",full:"Catch-up Payroll",cat:"Pipelines",detail:"EOY catch-up payroll pipeline."},
+  {term:"BS",full:"Banking Status",cat:"Pipelines",detail:"Bank transaction categorization pipeline."},
+  {term:"BIB",full:"Books in a Box",cat:"Products",detail:"Lowest product tier. Tiers: Platinum → Standard → Digital → BIB."},
+  {term:"SLA",full:"Service Level Agreement",cat:"Operations",detail:"CS Support: 48hr courtesy email for escalated tickets. 2025 goal: SLAs for all engagements."},
+  {term:"QA",full:"Quality Assurance",cat:"Operations",detail:"Dushini reviews all CS drafts. Accounting has multi-step monthly checklist."},
+  {term:"BAU",full:"Business As Usual",cat:"Operations",detail:"Steady-state ops after rollout. Target model once SL support is ramped."},
+  {term:"WBR",full:"Weekly Business Review",cat:"Reporting",detail:"Monday report. Part of weekly cadence with OIL List, Pipeline Review, L10 Report."},
+  {term:"L10",full:"Level 10 Meeting (EOS)",cat:"Reporting",detail:"EOS framework weekly meeting. L10 Report produced Wednesdays."},
+  {term:"CCH",full:"CCH (Tax Software)",cat:"Tools & Systems",detail:"Tax preparation software used by the Tax Operations team. First SOP in Tax Ops is CCH Profile/Return Creation."},
+  {term:"POA",full:"Power of Attorney",cat:"Legal / Config",detail:"Tax form (Form 2848) authorizing someone to represent a taxpayer before the IRS. POA Processing is one of the 7 Tax Operations SOPs."},
+  {term:"PRO",full:"Professional / Lettuce Partner Channel",cat:"Pipelines",detail:"Label for the Lettuce-branded customer base that Formations fulfills. PRO pipelines (PRO Notice, PRO New Business Incorporation, 1040 PRO) are specifically for Lettuce partner customers, distinct from Formations direct customers."},
+  {term:"MRR",full:"Monthly Recurring Revenue",cat:"Operations",detail:"Subscription revenue metric. Controller Support (Chamara) maintains MRR records, manages plan changes, and does MRR updates/reconciliation."},
+  {term:"AR",full:"Accounts Receivable",cat:"Operations",detail:"Money owed to the company. Controller Support has an AR Collections Process for outstanding customer payments."},
+];
+
+
+
+// ==================== TEAM DATA ====================
+const teamData = {
+  lettuceUS: {
+    label: "Lettuce — US Team",
+    color: C.cyan,
+    people: [
+      {name:"Ran Harpaz",role:"CEO & Founder",area:"Leadership",email:"ran@lettuce.co",notes:"Proposed the 3 automation initiatives. Created the FL Migration docs in Confluence."},
+      {name:"Brad Matthews",role:"Head of Operations",area:"Operations",email:"brad.matthews@lettuce.co",notes:"Reports to Ran. Owns Books Review automation initiative. Oversees Davis, payroll ops, customer success."},
+      {name:"Jeremiah Porten",role:"Engineering Lead",area:"Engineering",email:"jeremiah.porten@lettuce.co",notes:"Leads engineering team."},
+      {name:"Davis Troutman",role:"Operations",area:"Operations",email:"davis.troutman@lettuce.co",notes:"Reports to Brad. Handles daily operations, fraud detection, banking issues, customer escalations."},
+      {name:"Camille Rosales",role:"CS Operations Lead",area:"Customer Success",email:"camille.rosales@lettuce.co",notes:"Owns Incorporation + Notice Handling automation. Manages SLA definitions, support team rollout, email review."},
+      {name:"Sarah Buford",role:"CSM",area:"Customer Success",email:"sarah.buford@lettuce.co",notes:"Level 3 US-based CSM. Reviews CS support responses. Handles complex client escalations."},
+      {name:"Ana Gazawi",role:"CS / Support",area:"Customer Success",email:"ana.gazawi@lettuce.co",notes:"Handles customer support escalations, coordinates with Formations and Lettuce teams."},
+      {name:"Meghan Duckett",role:"Customer Success",area:"Customer Success",email:"meghan.duckett@lettuce.co",notes:"Customer success, coordinates with Formations sales for customer transitions."},
+      {name:"Mark Jackson",role:"Customer Success",area:"Customer Success",email:"mark.jackson@lettuce.co",notes:"Identified Healthcare VIP customers for priority escalations."},
+      {name:"Brittney Ramirez",role:"Customer Success",area:"Customer Success",email:"brittney.ramirez@lettuce.co",notes:"CS team member."},
+      {name:"Elena Henderson",role:"Payroll Operations",area:"Operations",email:"elena.henderson@lettuce.co",notes:"Handles payroll operations issues across customer accounts."},
+      {name:"Dino Moraites",role:"Operations (Scalable Ops)",area:"Operations",email:"dino.moraites@lettuce.co",notes:"Works on scalable operations initiatives with Ran and Brad."},
+      {name:"Paul Keum",role:"Sales / Customer Success",area:"Sales",email:"paul.keum@lettuce.co",notes:"Handles customer transitions and activated-to-income projects."},
+      {name:"Yarin Feigenbaum",role:"Tax / Books Review",area:"Tax Advisory",email:"yarin.feigenbaum@lettuce.co",notes:"Tax advisory, works on books review processes with Formations team."},
+      {name:"Cassidy Rasmussen",role:"Product / Project",area:"Product",email:"cassidy.rasmussen@lettuce.co",notes:"Manages formations.lettuce.co UI project, coordinates with Formations professional services."},
+      {name:"Jesse Myers",role:"Engineering",area:"Engineering",email:"jesse.myers@lettuce.co",notes:"Engineering team."},
+      {name:"Eyal Shahar",role:"UX Design",area:"Product",email:"eyal.shahar@lettuce.co",notes:"UX design."},
+      {name:"Alex Bloom",role:"Design",area:"Product",email:"alex.bloom@lettuce.co",notes:"Design team."},
+      {name:"Danny McCullough",role:"Head of Performance Marketing",area:"Marketing",email:"danny.mccullough@lettuce.co",notes:"Leads performance marketing. Identifies verticals for tailored messaging."},
+      {name:"Matt Bendett",role:"Marketing",area:"Marketing",email:"matt.bendett@lettuce.co",notes:"Leading vertical-specific marketing targeting."},
+      {name:"Megan Redford",role:"Partnerships",area:"Partnerships",email:"megan.redford@lettuce.co",notes:"Partnership webinars, scheduling."},
+      {name:"Sonya Jamula",role:"Partnerships",area:"Partnerships",email:"sonya.jamula@lettuce.co",notes:"Partnerships team."},
+      {name:"Anne Schwab",role:"Partnerships",area:"Partnerships",email:"anne.schwab@lettuce.co",notes:"Partnerships team."},
+    ]
+  },
+  formationsUS: {
+    label: "Formations — Professional Services (US)",
+    color: C.orange,
+    people: [
+      {name:"Isaac Andresky",role:"Sales",area:"Sales",email:"isaac@formationscorp.com",notes:"Formations sales team. Handles customer transitions from Lettuce to Formations."},
+      {name:"Marcus",role:"Tax Professional Services",area:"Tax",email:"marcus@formationscorp.com",notes:"1040 review access on formations.lettuce.co. Referenced in Notion docs for HubSpot ticket flow. No longer in Slack."},
+      {name:"Matthew",role:"Tax Professional Services",area:"Tax",email:"m.matthew@formationscorp.com",notes:"1040 review access on formations.lettuce.co."},
+      {name:"Jonathan",role:"Tax Professional Services",area:"Tax",email:"m.jonathan@formationscorp.com",notes:"1040 review access on formations.lettuce.co."},
+      {name:"Charan",role:"Tax Professional Services",area:"Tax",email:"v.charan@formationscorp.com",notes:"1040 review access on formations.lettuce.co."},
+    ]
+  },
+  sriLanka: {
+    label: "Sri Lanka — gsk Fulfillment Team (~45 staff)",
+    color: C.purple,
+    people: [
+      {name:"Nawanjana",role:"Configuration Dept Head",area:"Configuration",email:"",notes:"Owns Config team (~5 staff). Handles incorporations, S-elections, payroll setup, amendments, renewals. ~1,400 incorporations/yr target."},
+      {name:"Harsha",role:"Accounting Dept Head",area:"Accounting",email:"",notes:"Owns Accounting team (29→33 staff). Monthly bookkeeping, P&L review, balance sheet. BOB ratio target: 75. Also monitors payroll-notice-handling Slack."},
+      {name:"Dhilan",role:"Business Tax (1120S) Dept Head",area:"Business Tax",email:"",notes:"Owns 1120S team (3→5 preparers). 60% by deadline, 95% by extension. All produced in Sri Lanka."},
+      {name:"Shiran Nilanga",role:"Individual Tax (1040) Dept Head",area:"Individual Tax",email:"",notes:"Co-owns 1040 team with Salinda (7→9 preparers). 50% by deadline. Also handles cross-department escalations."},
+      {name:"Salinda Chamal",role:"Individual Tax (1040) + KMT",area:"Individual Tax",email:"",notes:"Co-owns 1040 team with Shiran. Main contact for KMT partner brand (20→50 returns)."},
+      {name:"Dushini Nicholas",role:"CS Support Team Lead",area:"CS Support",email:"n.dushini@formationscorp.com",notes:"Leads 4-person CS Support team. Reviews all drafted responses before sending. Handles L1/L2 triage."},
+      {name:"Ashini Lokuge",role:"CS Support",area:"CS Support",email:"l.ashini@formationscorp.com",notes:"Active CS Support team member."},
+      {name:"Kalani Kodippily",role:"CS Support",area:"CS Support",email:"k.kalani@formationscorp.com",notes:"Active CS Support team member."},
+      {name:"Wajiva Hasitha",role:"Tax Ops + Doc Processing",area:"Supporting Services",email:"",notes:"Leads both Tax Operations and Document Processing teams."},
+      {name:"Sanjulee",role:"Platinum Accounting",area:"Accounting",email:"",notes:"Handles Platinum-tier customer accounting. Monitors platinum Slack channel."},
+      {name:"Gayan",role:"General / Admin",area:"Admin",email:"",notes:"Monitors general Slack channel. gsk Admin functions."},
+      {name:"Keshani Madurapperuma",role:"Config Specialist",area:"Configuration",email:"",notes:"Handles Swyft Filings incorporations. Config team member under Nawanjana."},
+      {name:"Pavindi Mahawattage",role:"Tax Notice Handling",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack channel. Handles individual tax notices."},
+      {name:"Dharshana Udawatte",role:"Tax Notice / Individual Tax",area:"Tax Ops",email:"",notes:"Monitors tax-notice-handling Slack. Handles individual tax and config notices. Also does 1040 tax preparation."},
+      {name:"Roshan Sanjeewa",role:"Business Tax",area:"Business Tax",email:"",notes:"Business tax team member under Dhilan."},
+      {name:"Chamara Liyanage",role:"Revenue Recognition",area:"Business Tax",email:"",notes:"Monitors revenue-recognition-team Slack channel."},
+      {name:"Anjale",role:"Config / Platinum",area:"Configuration",email:"",notes:"Handles Lettuce config and Platinum work fulfillment."},
+      {name:"Kavindu",role:"Tax (1040/1120S)",area:"Tax",email:"",notes:"Handles both individual and business tax work. Cost segregation."},
+      {name:"Udeshani Shanika",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Handles cost-segregation-notifications. Lettuce individual tax. Also does 1040 tax preparation."},
+      {name:"Kavindu Peiris",role:"Individual Tax / Business Tax",area:"Individual Tax",email:"",notes:"1040 tax preparer. Also handles 1040 rejection processing and business tax support."},
+      {name:"Piumi Imalsha",role:"Payroll Notice Handling",area:"Configuration",email:"",notes:"Handles payroll-notice-handling along with Dulani."},
+      {name:"Dulani",role:"Payroll Notice Handling",area:"Configuration",email:"m.dulani@formationscorp.com",notes:"Handles payroll-notice-handling along with Piumi."},
+      {name:"Vidushika Wijesinghe",role:"Individual Tax",area:"Individual Tax",email:"",notes:"Individual tax team under Shiran."},
+      {name:"Senuri",role:"Config / Tax Notice",area:"Configuration",email:"",notes:"Handles config and tax notice work."},
+      {name:"Malan",role:"Config / Payroll Notice",area:"Configuration",email:"",notes:"Handles payroll notice config work."},
+    ]
+  },
+  departed: {
+    label: "No Longer Active (referenced in docs but not in Slack)",
+    color: "#6b7280",
+    people: [
+      {name:"Melissa Stotland",role:"CSM (Formations)",area:"Customer Success",email:"s***@formationscorp.com",notes:"Was Manager, Customer Success at Formations Corporation. Referenced in Level 1/2/3 Support docs for auditing responses. No longer in Slack workspace."},
+      {name:"Alex Leary",role:"CSM (Formations)",area:"Customer Success",email:"",notes:"Was a CSM. Inbox reviewed by SL team. Referenced in support docs. No longer in Slack."},
+      {name:"Kapila",role:"FL Director / Manager",area:"SL Leadership",email:"",notes:"Was FL team manager in Sri Lanka. Owned hiring, English proficiency testing, scheduling. Key owner in Level 1/2/3 rollout. No longer in Slack."},
+      {name:"Nethni Peiris",role:"CS Support (SL)",area:"CS Support",email:"p.nethni@formationscorp.com",notes:"Was on Dushini's CS Support team. Confirmed no longer active in the Notion docs."},
+      {name:"Keyahnna O'Neil",role:"Business Contact",area:"Operations",email:"",notes:"Was business contact for payroll registrations (425-292-2008). No longer in Slack."},
+      {name:"Samantha",role:"IRS Mail Handler",area:"Operations",email:"",notes:"Was responsible for mailing S-Election forms to IRS. No longer in Slack."},
+      {name:"Marcus Edgette",role:"Tax / HubSpot Ops (Formations)",area:"Tax",email:"marcus@formationscorp.com",notes:"Was on Formations professional services team. Referenced for 1120S tax and HubSpot ticket flow. No longer in Slack."},
+    ]
+  }
+};
+
+// ==================== ACRONYM TOOLTIP HELPER ====================
+const acrMap = {};
+glossary.forEach(g => { acrMap[g.term] = {full:g.full, detail:g.detail}; });
+function Acr({t,children}) {
+  const info = acrMap[t];
+  if (!info) return children || t;
+  return React.createElement('span', {className:'acr'}, 
+    children || t,
+    React.createElement('span', {className:'acr-tip'}, 
+      React.createElement('strong', null, t + ' — ' + info.full),
+      info.detail
+    )
+  );
+}
+
+// ==================== COMPONENTS ====================
+function OnboardingTab() {
+  const [active, setActive] = useState("strategy");
+  const cur = onboardingSections.find(s => s.id === active);
+  return (
+    <div style={{display:"flex",gap:0,minHeight:"60vh"}}>
+      <div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",paddingRight:0,position:"sticky",top:20,alignSelf:"flex-start"}}>
+        {onboardingSections.map(s => (
+          <div key={s.id} onClick={() => setActive(s.id)} className={"nav-item"+(active===s.id?" active":"")} style={{padding:"8px 16px",fontSize:13,fontWeight:s.highlight?600:undefined,color:s.highlight&&active!==s.id?"#06b6d4":undefined}}>{s.label}</div>
+        ))}
+      </div>
+      <div style={{flex:1,padding:"4px 24px 40px",minHeight:300}}>{cur && cur.content()}</div>
+    </div>
+  );
+}
+
+function WorkflowTab() {
+  const [activeCat, setActiveCat] = useState("config");
+  const [expanded, setExpanded] = useState(null);
+  const [showUn, setShowUn] = useState(false);
+  const cat = wfCats.find(c => c.id === activeCat);
+  const totalDoc = wfCats.reduce((s,c) => s+c.workflows.length, 0);
+  const totalUn = unmigrated.reduce((s,g) => s+g.items.length, 0);
+  return (
+    <div style={{display:"flex",gap:0,minHeight:"60vh"}}>
+      <div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",position:"sticky",top:20,alignSelf:"flex-start"}}>
+        <div style={{padding:"8px 16px",marginBottom:8}}>
+          <div style={{display:"flex",gap:8}}>
+            <div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.green,letterSpacing:"0.05em"}}>DOCUMENTED</div><div style={{fontSize:20,fontWeight:500}}>{totalDoc}</div></div>
+            <div className="stat-card" style={{flex:1,padding:8}}><div className="mono" style={{fontSize:9,color:C.amber,letterSpacing:"0.05em"}}>PENDING</div><div style={{fontSize:20,fontWeight:500}}>{totalUn}</div></div>
+          </div>
+        </div>
+        {wfCats.map(c => (
+          <div key={c.id} onClick={() => {setActiveCat(c.id);setExpanded(null);setShowUn(false);}} className={"nav-item"+(activeCat===c.id&&!showUn?" active":"")} style={{padding:"8px 16px",fontSize:13,display:"flex",justifyContent:"space-between"}}>
+            <span>{c.label}</span><span className="mono" style={{fontSize:10,opacity:0.5}}>{c.workflows.length}</span>
+          </div>
+        ))}
+        <div onClick={() => setShowUn(!showUn)} className={"nav-item"+(showUn?" active":"")} style={{padding:"8px 16px",fontSize:13,color:C.amber}}>Not yet migrated ({totalUn})</div>
+      </div>
+      <div style={{flex:1,padding:"0 24px"}}>
+        {!showUn && cat && (
+          <div>
+            <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:14}}><span style={{fontWeight:500,fontSize:15}}>{cat.label}</span><span className="mono step-badge" style={{color:cat.c,border:"1px solid "+cat.c+"33",background:cat.c+"1a"}}>Owner: {cat.owner}</span></div>
+            {cat.workflows.map(w => {
+              const isExp = expanded === w.id;
+              return (
+                <div key={w.id} className="card" style={{marginBottom:10,overflow:"hidden",borderColor:isExp?"rgba(6,182,212,0.2)":"rgba(255,255,255,0.06)"}}>
+                  <div onClick={() => setExpanded(isExp?null:w.id)} className="expand-btn" style={{padding:14,display:"flex",justifyContent:"space-between",alignItems:"start"}}>
+                    <div><div style={{fontWeight:500,fontSize:14}}>{w.name}</div><div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{w.trigger}</div></div>
+                    <span style={{fontSize:11,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span>
+                  </div>
+                  {isExp && (
+                    <div style={{padding:"0 14px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                      <div className="mono" style={{fontSize:10,color:"#6b7280",margin:"10px 0 8px",letterSpacing:"0.03em"}}>Pipeline: {w.pipeline}</div>
+                      {w.steps.map((s,i)=>(<div key={i} style={{display:"flex",gap:8,marginBottom:6}}><span className="mono" style={{fontSize:10,color:"#6b7280",minWidth:16,textAlign:"right"}}>{i+1}</span><span style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{s}</span></div>))}
+                      <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <div style={{fontSize:12,color:"#9ca3af"}}><strong style={{color:"#f0f0ff"}}>Output:</strong> {w.output}</div>
+                        {w.notes && <div className="warn-card" style={{borderRadius:6,padding:"8px 12px",marginTop:8,fontSize:11,lineHeight:"1.5"}}><strong style={{color:"#eab308"}}>Note:</strong> <span style={{color:"#9ca3af"}}>{w.notes}</span></div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {showUn && (
+          <div>
+            <div className="warn-card" style={{borderRadius:8,padding:"12px 16px",marginBottom:14,fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}><strong style={{color:"#eab308"}}>These workflows are referenced but not yet readable:</strong> not migrated to Confluence, behind Notion permission restrictions, or sub-pages not included in migration batch.</div>
+            {unmigrated.map((g,i)=>(<div key={i} style={{marginBottom:16}}>
+              <div className="mono" style={{fontSize:10,color:"#6b7280",marginBottom:6,letterSpacing:"0.05em",textTransform:"uppercase"}}>{g.group}</div>
+              {g.items.map((item,j)=>(<div key={j} style={{fontSize:12,color:"#9ca3af",padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",display:"flex",alignItems:"center",gap:8}}><span style={{color:"#eab308",fontSize:8}}>&#9675;</span>{item}</div>))}
+            </div>))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GlossaryTab() {
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState("All");
+  const [expanded, setExpanded] = useState(null);
+  const cats = [...new Set(glossary.map(a=>a.cat))].sort();
+  const filtered = glossary.filter(a => {
+    const ms = search==="" || a.term.toLowerCase().includes(search.toLowerCase()) || a.full.toLowerCase().includes(search.toLowerCase()) || a.detail.toLowerCase().includes(search.toLowerCase());
+    const mc = activeCat==="All" || a.cat===activeCat;
+    return ms && mc;
+  });
+  return (
+    <div style={{display:"flex",gap:0,minHeight:"calc(100vh - 120px)"}}>
+      <div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)"}}>
+        <div style={{padding:"8px 16px",marginBottom:4}}><input type="text" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",padding:"6px 10px",borderRadius:6,fontSize:12}}/></div>
+        <div onClick={()=>setActiveCat("All")} className={"nav-item"+(activeCat==="All"?" active":"")} style={{padding:"8px 16px",fontSize:13}}>All ({glossary.length})</div>
+        {cats.map(c=>{const ct=glossary.filter(a=>a.cat===c).length;return(
+          <div key={c} onClick={()=>setActiveCat(c)} className={"nav-item"+(activeCat===c?" active":"")} style={{padding:"8px 16px",fontSize:13,display:"flex",justifyContent:"space-between"}}>
+            <span>{c}</span><span className="mono" style={{fontSize:10,opacity:0.5}}>{ct}</span>
+          </div>
+        );})}
+      </div>
+      <div style={{flex:1,padding:"0 24px"}}>
+        <div className="mono" style={{fontSize:10,color:"#6b7280",marginBottom:10,letterSpacing:"0.05em"}}>{filtered.length} TERM{filtered.length!==1?"S":""}</div>
+        {filtered.map(a=>{const isExp=expanded===a.term;return(
+          <div key={a.term} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+            <div onClick={()=>setExpanded(isExp?null:a.term)} className="expand-btn" style={{padding:"10px 0",display:"flex",alignItems:"baseline",gap:12}}>
+              <span className="mono" style={{fontWeight:500,fontSize:13,color:C.cyan,minWidth:50}}>{a.term}</span>
+              <span style={{fontSize:13,flex:1}}>{a.full}</span>
+              <span style={{fontSize:10,color:"#6b7280"}}>{isExp?"\u25B2":"\u25BC"}</span>
+            </div>
+            {isExp && <div style={{paddingBottom:10,marginLeft:62}}><div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.7"}}>{a.detail}</div><div style={{marginTop:6}}><span className="mono step-badge" style={{fontSize:9,color:"#6b7280",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)"}}>{a.cat}</span></div></div>}
+          </div>
+        );})}
+        {filtered.length===0 && <div style={{textAlign:"center",color:"#6b7280",fontSize:13,padding:32}}>No matching terms</div>}
+      </div>
+    </div>
+  );
+}
+
+// ==================== MAIN APP ====================
+
+function TeamTab() {
+  const [activeGroup, setActiveGroup] = useState("lettuceUS");
+  const [expanded, setExpanded] = useState(null);
+  const groups = [
+    {id:"lettuceUS",...teamData.lettuceUS},
+    {id:"formationsUS",...teamData.formationsUS},
+    {id:"sriLanka",...teamData.sriLanka},
+    {id:"departed",...teamData.departed},
+  ];
+  const group = groups.find(g => g.id === activeGroup);
+  
+  // Group people by area
+  const byArea = {};
+  if (group) group.people.forEach(p => {
+    if (!byArea[p.area]) byArea[p.area] = [];
+    byArea[p.area].push(p);
+  });
+  
+  return (
+    <div style={{display:"flex",gap:0,minHeight:"60vh"}}>
+      <div style={{minWidth:200,borderRight:"1px solid rgba(255,255,255,0.06)",paddingRight:0,position:"sticky",top:20,alignSelf:"flex-start"}}>
+        {groups.map(g => (
+          <div key={g.id} onClick={() => {setActiveGroup(g.id);setExpanded(null);}} className={"nav-item"+(activeGroup===g.id?" active":"")} style={{padding:"8px 16px",fontSize:12,lineHeight:"1.4"}}>
+            <span style={{color:activeGroup===g.id?g.color:undefined}}>{g.label}</span>
+            <div className="mono" style={{fontSize:10,color:"#4b5563",marginTop:2}}>{g.people.length} people</div>
+          </div>
+        ))}
+      </div>
+      <div style={{flex:1,padding:"4px 24px 40px"}}>
+        {group && (
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:16}}>
+              <span style={{fontWeight:500,fontSize:16,color:group.color}}>{group.label}</span>
+              <span className="mono" style={{fontSize:11,color:"#6b7280"}}>{group.people.length} people</span>
+            </div>
+            {Object.entries(byArea).map(([area, people]) => (
+              <div key={area} style={{marginBottom:16}}>
+                <div className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:8,paddingBottom:4,borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{area}</div>
+                {people.map((p,i) => {
+                  const isExp = expanded === p.name;
+                  return (
+                    <div key={i} style={{marginBottom:2}}>
+                      <div onClick={() => setExpanded(isExp?null:p.name)} className="expand-btn" style={{padding:"8px 12px",borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                        <div>
+                          <span style={{fontWeight:500,fontSize:14}}>{p.name}</span>
+                          <span style={{fontSize:12,color:"#6b7280",marginLeft:10}}>{p.role}</span>
+                        </div>
+                        <span style={{fontSize:10,color:"#4b5563"}}>{isExp?"\u25B2":"\u25BC"}</span>
+                      </div>
+                      {isExp && (
+                        <div style={{padding:"4px 12px 12px 12px"}}>
+                          {p.email && <div className="mono" style={{fontSize:11,color:C.cyan,marginBottom:4}}>{p.email}</div>}
+                          <div style={{fontSize:12,color:"#9ca3af",lineHeight:"1.6"}}>{p.notes}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState("onboarding");
+  const tabs = [{id:"onboarding",label:"ONBOARDING GUIDE"},{id:"workflows",label:"WORKFLOW APPENDIX"},{id:"glossary",label:"ACRONYM GLOSSARY"},{id:"team",label:"TEAM DIRECTORY"}];
+  return (
+    <div style={{maxWidth:1100,margin:"0 auto",padding:"24px 24px 60px"}}>
+      <div style={{marginBottom:20}}>
+        <h1 style={{fontSize:20,fontWeight:500,marginBottom:2}}>Sri Lanka - FL at a Glance</h1>
+        <p className="mono" style={{fontSize:10,color:"#6b7280",letterSpacing:"0.08em"}}>LETTUCE / FORMATIONS FULFILLMENT OPERATIONS</p>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:20,borderBottom:"1px solid rgba(255,255,255,0.06)",paddingBottom:12}}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} className="mono" style={{
+            padding:"6px 14px",borderRadius:4,fontSize:10,letterSpacing:"0.05em",cursor:"pointer",border:"1px solid",transition:"all 0.15s",
+            background:tab===t.id?"rgba(6,182,212,0.1)":"transparent",
+            borderColor:tab===t.id?"rgba(6,182,212,0.4)":"transparent",
+            color:tab===t.id?"#06b6d4":"#6b7280"
+          }}>{t.label}</button>
+        ))}
+      </div>
+      {tab === "onboarding" && <OnboardingTab />}
+      {tab === "workflows" && <WorkflowTab />}
+      {tab === "glossary" && <GlossaryTab />}
+      {tab === "team" && <TeamTab />}
+      <div className="mono" style={{marginTop:24,fontSize:9,color:"rgba(255,255,255,0.15)",borderTop:"1px solid rgba(255,255,255,0.04)",paddingTop:12,letterSpacing:"0.05em"}}>
+        SOURCES: NOTION (FULFILLMENT - FL, LEVEL 1/2/3 SUPPORT) + CONFLUENCE (FL MIGRATION, 22 PAGES) · MARCH 2026
+      </div>
+    </div>
+  );
+}
+
 ReactDOM.render(<App />, document.getElementById('root'));
-setTimeout(() => {const acrData={};glossary.forEach(g=>{acrData[g.term]=g.full+' — '+g.detail;});const acronymPattern=new RegExp('\\b('+Object.keys(acrData).filter(k=>k.length>=2&&k===k.toUpperCase()||['gsk','P&L'].includes(k)).sort((a,b)=>b.length-a.length).join('|').replace('&','&amp;')+')\\b','g');function wrapTextNode(node){if(!node.textContent.match(acronymPattern))return;if(node.parentElement&&(node.parentElement.classList.contains('acr')||node.parentElement.classList.contains('acr-tip')||node.parentElement.tagName==='INPUT'||node.parentElement.tagName==='BUTTON'||node.parentElement.closest('.acr')))return;const text=node.textContent;const parts=[];let lastIdx=0;let match;const re=new RegExp('\\b('+Object.keys(acrData).filter(k=>k.length>=2).sort((a,b)=>b.length-a.length).join('|')+')\\b','g');while((match=re.exec(text))!==null){if(match.index>lastIdx)parts.push(document.createTextNode(text.slice(lastIdx,match.index)));const span=document.createElement('span');span.className='acr';span.textContent=match[1];const tip=document.createElement('span');tip.className='acr-tip';const tipTitle=match[1]+' — '+(glossary.find(g=>g.term===match[1])?.full||'');const tipDetail=glossary.find(g=>g.term===match[1])?.detail||'';tip.innerHTML='<strong>'+tipTitle+'</strong>'+tipDetail;span.appendChild(tip);parts.push(span);lastIdx=re.lastIndex;}if(parts.length===0)return;if(lastIdx<text.length)parts.push(document.createTextNode(text.slice(lastIdx)));const frag=document.createDocumentFragment();parts.forEach(p=>frag.appendChild(p));node.parentNode.replaceChild(frag,node);}function processNode(root){const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{if(!n.textContent.trim())return NodeFilter.FILTER_REJECT;if(n.parentElement.closest('.acr'))return NodeFilter.FILTER_REJECT;if(n.parentElement.tagName==='SCRIPT'||n.parentElement.tagName==='STYLE')return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);nodes.forEach(wrapTextNode);}processNode(document.getElementById('root'));const observer=new MutationObserver((mutations)=>{mutations.forEach(m=>{m.addedNodes.forEach(n=>{if(n.nodeType===1)processNode(n);});});});observer.observe(document.getElementById('root'),{childList:true,subtree:true});},500);
+
+// Post-render: wrap known acronyms with hover tooltips throughout the page
+setTimeout(() => {
+  const acrData = {};
+  glossary.forEach(g => { acrData[g.term] = g.full + ' — ' + g.detail; });
+  
+  // Only match standalone acronyms (word boundaries), skip ones already in tooltips
+  const acronymPattern = new RegExp('\\b(' + Object.keys(acrData).filter(k => k.length >= 2 && k === k.toUpperCase() || ['gsk','P&L'].includes(k)).sort((a,b) => b.length - a.length).join('|').replace('&', '&amp;') + ')\\b', 'g');
+  
+  function wrapTextNode(node) {
+    if (!node.textContent.match(acronymPattern)) return;
+    if (node.parentElement && (node.parentElement.classList.contains('acr') || node.parentElement.classList.contains('acr-tip') || node.parentElement.tagName === 'INPUT' || node.parentElement.tagName === 'BUTTON' || node.parentElement.closest('.acr'))) return;
+    
+    const text = node.textContent;
+    const parts = [];
+    let lastIdx = 0;
+    let match;
+    const re = new RegExp('\\b(' + Object.keys(acrData).filter(k => k.length >= 2).sort((a,b) => b.length - a.length).join('|') + ')\\b', 'g');
+    
+    while ((match = re.exec(text)) !== null) {
+      if (match.index > lastIdx) parts.push(document.createTextNode(text.slice(lastIdx, match.index)));
+      const span = document.createElement('span');
+      span.className = 'acr';
+      span.textContent = match[1];
+      const tip = document.createElement('span');
+      tip.className = 'acr-tip';
+      const tipTitle = match[1] + ' — ' + (glossary.find(g=>g.term===match[1])?.full || '');
+      const tipDetail = glossary.find(g=>g.term===match[1])?.detail || '';
+      tip.innerHTML = '<strong>' + tipTitle + '</strong>' + tipDetail;
+      span.appendChild(tip);
+      parts.push(span);
+      lastIdx = re.lastIndex;
+    }
+    if (parts.length === 0) return;
+    if (lastIdx < text.length) parts.push(document.createTextNode(text.slice(lastIdx)));
+    
+    const frag = document.createDocumentFragment();
+    parts.forEach(p => frag.appendChild(p));
+    node.parentNode.replaceChild(frag, node);
+  }
+  
+  // Use MutationObserver to continuously wrap new acronyms as tabs change
+  function processNode(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => {
+        if (!n.textContent.trim()) return NodeFilter.FILTER_REJECT;
+        if (n.parentElement.closest('.acr')) return NodeFilter.FILTER_REJECT;
+        if (n.parentElement.tagName === 'SCRIPT' || n.parentElement.tagName === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(wrapTextNode);
+  }
+  
+  processNode(document.getElementById('root'));
+  
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach(m => {
+      m.addedNodes.forEach(n => {
+        if (n.nodeType === 1) processNode(n);
+      });
+    });
+  });
+  observer.observe(document.getElementById('root'), {childList: true, subtree: true});
+}, 500);
 </script>
 </body>
 </html>
